@@ -2,61 +2,61 @@
 Load CSV Data to FalkorDB
 ==========================
 
-CSV 파일을 읽어서 FalkorDB 그래프에 로드하는 스크립트입니다.
+Script to read CSV files and load them into FalkorDB graph.
 
 Usage:
-    python 2_load_to_falkordb.py
+    python 1_load_to_falkordb.py
 """
 
 import csv
 import os
 from falkordb import FalkorDB
 
-# 설정
+# Settings
 GRAPH_NAME = 'EnergyGraph'
 CSV_DIR = 'data/csv'
 
 def load_data_to_falkordb():
-    """CSV 데이터를 FalkorDB에 로드합니다."""
+    """Load CSV data into FalkorDB."""
     
     print("=" * 60)
-    print("FalkorDB 데이터 로드")
+    print("FalkorDB Data Loading")
     print("=" * 60)
     
-    # FalkorDB 연결
-    print("\n🔌 FalkorDB에 연결 중...")
+    # Connect to FalkorDB
+    print("\n🔌 Connecting to FalkorDB...")
     try:
         db = FalkorDB(host='localhost', port=6379)
         g = db.select_graph(GRAPH_NAME)
-        print(f"✅ '{GRAPH_NAME}' 그래프에 연결 완료")
+        print(f"✅ Connected to graph '{GRAPH_NAME}'")
     except Exception as e:
-        print(f"❌ FalkorDB 연결 실패: {e}")
-        print("\n💡 FalkorDB가 실행 중인지 확인하세요:")
+        print(f"❌ Failed to connect to FalkorDB: {e}")
+        print("\n💡 Check if FalkorDB is running:")
         print("   docker ps | grep falkordb")
         return
     
-    # 기존 그래프 삭제 확인
-    print(f"\n⚠️  기존 '{GRAPH_NAME}' 데이터를 삭제하고 새로 로드합니다.")
-    confirm = input("계속하시겠습니까? (y/N): ").strip().lower()
+    # Confirm deletion of existing graph
+    print(f"\n⚠️  Existing data in '{GRAPH_NAME}' will be deleted and reloaded.")
+    confirm = input("Continue? (y/N): ").strip().lower()
     if confirm != 'y':
-        print("취소되었습니다.")
+        print("Cancelled.")
         return
     
-    # 그래프 삭제
+    # Delete graph
     try:
         g = db.select_graph(GRAPH_NAME)
         g.delete()
-        print("✅ 기존 데이터 삭제 완료")
+        print("✅ Existing data deleted")
     except Exception as e:
-        # 그래프가 없으면 에러가 날 수 있음 (무시)
-        # print(f"⚠️  기존 데이터 삭제 중 오류 발생 (무시됨): {e}")
+        # Error may occur if graph does not exist (ignore)
+        # print(f"⚠️  Error deleting existing data (ignored): {e}")
         pass
     
-    # 그래프 다시 선택 (생성)
+    # Select graph again (create)
     g = db.select_graph(GRAPH_NAME)
     
-    # 1. Companies 로드
-    print("\n🏢 Companies 로드 중...")
+    # 1. Load Companies
+    print("\n🏢 Loading Companies...")
     companies_path = os.path.join(CSV_DIR, 'companies.csv')
     
     try:
@@ -65,7 +65,7 @@ def load_data_to_falkordb():
             companies = list(reader)
             
         for i, row in enumerate(companies, 1):
-            # 작은따옴표 이스케이프
+            # Escape single quotes
             name = row['name'].replace("'", "\\'")
             country = row['country'].replace("'", "\\'")
             comp_type = row.get('type', 'Unknown').replace("'", "\\'")
@@ -74,19 +74,19 @@ def load_data_to_falkordb():
             g.query(query)
             
             if i % 20 == 0:
-                print(f"   {i}/{len(companies)} 처리 중...", end="\r")
+                print(f"   Processing {i}/{len(companies)}...", end="\r")
         
-        print(f"   ✅ {len(companies)}개 회사 로드 완료")
+        print(f"   ✅ {len(companies)} companies loaded")
         
     except FileNotFoundError:
-        print(f"   ❌ 파일을 찾을 수 없습니다: {companies_path}")
+        print(f"   ❌ File not found: {companies_path}")
         return
     except Exception as e:
-        print(f"   ❌ Companies 로드 실패: {e}")
+        print(f"   ❌ Failed to load Companies: {e}")
         return
     
-    # 2. Technologies 로드
-    print("\n🔋 Technologies 로드 중...")
+    # 2. Load Technologies
+    print("\n🔋 Loading Technologies...")
     technologies_path = os.path.join(CSV_DIR, 'technologies.csv')
     
     try:
@@ -102,19 +102,19 @@ def load_data_to_falkordb():
             g.query(query)
             
             if i % 100 == 0:
-                print(f"   {i}/{len(technologies)} 처리 중...", end="\r")
+                print(f"   Processing {i}/{len(technologies)}...", end="\r")
         
-        print(f"   ✅ {len(technologies)}개 기술 로드 완료")
+        print(f"   ✅ {len(technologies)} technologies loaded")
         
     except FileNotFoundError:
-        print(f"   ❌ 파일을 찾을 수 없습니다: {technologies_path}")
+        print(f"   ❌ File not found: {technologies_path}")
         return
     except Exception as e:
-        print(f"   ❌ Technologies 로드 실패: {e}")
+        print(f"   ❌ Failed to load Technologies: {e}")
         return
     
-    # 3. Relations 로드
-    print("\n🔗 Relations 로드 중...")
+    # 3. Load Relations
+    print("\n🔗 Loading Relations...")
     relations_path = os.path.join(CSV_DIR, 'relations.csv')
     
     try:
@@ -125,9 +125,9 @@ def load_data_to_falkordb():
         for i, row in enumerate(relations, 1):
             start_id = row['START_ID'].replace("'", "\\'")
             end_id = row['END_ID'].replace("'", "\\'")
-            rel_type = row['TYPE'].upper() # 관계 타입은 대문자로 통일
+            rel_type = row['TYPE'].upper() # Unify relation types to uppercase
             
-            # 노드 라벨에 상관없이 name으로 매칭하여 관계 생성
+            # Create relation by matching name regardless of node label
             query = f"""
             MATCH (a {{name: '{start_id}'}}), (b {{name: '{end_id}'}})
             CREATE (a)-[:{rel_type}]->(b)
@@ -135,27 +135,27 @@ def load_data_to_falkordb():
             g.query(query)
             
             if i % 100 == 0:
-                print(f"   {i}/{len(relations)} 처리 중...", end="\r")
+                print(f"   Processing {i}/{len(relations)}...", end="\r")
         
-        print(f"   ✅ {len(relations)}개 관계 로드 완료")
+        print(f"   ✅ {len(relations)} relations loaded")
         
     except FileNotFoundError:
-        print(f"   ❌ 파일을 찾을 수 없습니다: {relations_path}")
+        print(f"   ❌ File not found: {relations_path}")
         return
     except Exception as e:
-        print(f"   ❌ Relations 로드 실패: {e}")
+        print(f"   ❌ Failed to load Relations: {e}")
         return
     
-    # 완료
+    # Complete
     print("\n" + "=" * 60)
-    print("✅ 데이터 로드 완료!")
-    print(f"📊 그래프 '{GRAPH_NAME}':")
-    print(f"   - Companies: {len(companies)}개")
-    print(f"   - Technologies: {len(technologies)}개")
-    print(f"   - Relations: {len(relations)}개")
+    print("✅ Data loading complete!")
+    print(f"📊 Graph '{GRAPH_NAME}':")
+    print(f"   - Companies: {len(companies)}")
+    print(f"   - Technologies: {len(technologies)}")
+    print(f"   - Relations: {len(relations)}")
     print("=" * 60)
-    print("\n💡 다음 단계:")
-    print("   python 3_enrich_graph_data.py --full")
+    print("\n💡 Next step:")
+    print("   python 2_enrich_graph_data.py --full")
     print("=" * 60)
 
 

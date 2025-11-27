@@ -1,22 +1,18 @@
 """
-FalkorDB Graph Data Enrichment Script
-======================================
-
-이 스크립트는 FalkorDB의 그래프 노드(Technology, Company)에 
-Ollama LLM을 사용하여 자동으로 설명(description)을 생성하고 추가합니다.
-
-100% 무료 로컬 실행!
-
-Usage:
-    python 3_enrich_graph_data.py --sample 10  # 테스트용, 10개만 처리
-    python 3_enrich_graph_data.py --full       # 전체 노드 처리
+FalkorDB Graph Data Enrichment Script (Fixed)
+=============================================
+1. Added --force option (overwrite existing data)
+2. Detects and regenerates empty strings ("")
+3. Increased LLM response length (num_predict) to prevent truncation
+4. Real-time terminal summary output
 """
 
 # ========================================
-# 🤖 LLM 모델 설정 (여기서 모델 변경)
+# 🤖 LLM Model Settings
 # ========================================
-LLM_MODEL = 'qwen3:8b'  # 사용할 Ollama 모델
-# 다른 옵션: 'llama3.1:8b', 'gemma2:9b', 'qwen2.5:14b', 'phi3'
+#LLM_MODEL = 'qwen2.5:14b'
+#LLM_MODEL = 'qwen3:8b'
+LLM_MODEL = 'deepseek-r1:8b'
 
 import argparse
 import time
@@ -24,112 +20,64 @@ import requests
 from typing import List, Dict
 from falkordb import FalkorDB
 
-
 class GraphEnricher:
-    """FalkorDB 그래프에 설명을 자동 생성하여 추가하는 클래스 (Ollama 사용)"""
-    
     def __init__(self, graph_name: str = 'EnergyGraph', ollama_url: str = 'http://localhost:11434'):
-        """
-        Args:
-            graph_name: FalkorDB 그래프 이름
-            ollama_url: Ollama API 엔드포인트
-        """
         self.db = FalkorDB(host='localhost', port=6379)
         self.graph = self.db.select_graph(graph_name)
-        
-        # Ollama 설정
         self.ollama_url = ollama_url
-        self.model = LLM_MODEL  # 설정 변수 사용
+        self.model = LLM_MODEL
         self.processed_count = 0
         
-        # Ollama 연결 확인
+        # Check Ollama connection
         try:
             response = requests.get(f"{ollama_url}/api/tags")
             if response.status_code != 200:
-                raise ConnectionError(f"Ollama 서버에 연결할 수 없습니다: {ollama_url}")
-            
-            # 모델 확인
-            models = response.json().get('models', [])
-            model_names = [m['name'] for m in models]
-            
-            if not any(self.model in m for m in model_names):
-                print(f"⚠️  {self.model} 모델이 없습니다. 'ollama pull {self.model}'로 다운로드하세요.")
-                
+                raise ConnectionError(f"Ollama unreachable: {ollama_url}")
         except Exception as e:
-            raise ConnectionError(f"Ollama 서버 연결 실패: {e}\n'ollama serve'를 실행하고 'ollama pull {self.model}'로 모델을 다운로드하세요.")
+            raise ConnectionError(f"Failed to connect to Ollama server: {e}")
         
-    def get_nodes_without_description(self, label: str, limit: int = None) -> List[Dict]:
+    def get_nodes_to_process(self, label: str, limit: int = None, force: bool = False) -> List[Dict]:
         """
-        설명이 없는 노드들을 조회합니다.
-        
-        Args:
-            label: 노드 레이블 ('Technology' or 'Company')
-            limit: 조회할 최대 개수 (None이면 전체)
-        
-        Returns:
-            노드 정보 리스트
+        Select nodes to process.
+        - force=True: Fetch all nodes.
+        - force=False: Fetch nodes where description is NULL or empty string ('').
         """
-        query = f"""
-        MATCH (n:{label})
-        WHERE n.description IS NULL
-        RETURN ID(n) as id, n.name as name, n.{('category' if label == 'Technology' else 'country')} as extra
-        """
+        if force:
+            # Force mode: Fetch all nodes unconditionally
+            query = f"""
+            MATCH (n:{label})
+            RETURN ID(n) as id, n.name as name, n.{('category' if label == 'Technology' else 'country')} as extra
+            """
+        else:
+            # Normal mode: Fetch only missing or empty descriptions
+            query = f"""
+            MATCH (n:{label})
+            WHERE n.description IS NULL OR n.description = ''
+            RETURN ID(n) as id, n.name as name, n.{('category' if label == 'Technology' else 'country')} as extra
+            """
         
         if limit:
             query += f" LIMIT {limit}"
         
         result = self.graph.query(query)
-        
         nodes = []
         for row in result.result_set:
-            nodes.append({
-                'id': row[0],
-                'name': row[1],
-                'extra': row[2]  # category for Technology, country for Company
-            })
-        
+            nodes.append({'id': row[0], 'name': row[1], 'extra': row[2]})
         return nodes
     
     def generate_description(self, name: str, extra: str, node_type: str) -> str:
-        """
-        Ollama LLM을 사용하여 노드에 대한 설명을 생성합니다.
-        
-        Args:
-            name: 노드 이름
-            extra: 추가 정보 (category or country)
-            node_type: 'technology' or 'company'
-        
-        Returns:
-            생성된 설명 텍스트
-        """
         if node_type == 'technology':
-            prompt = f"""You are a battery technology expert. Provide a concise 2-3 sentence description of the following battery technology:
-
-Technology Name: {name}
-Category: {extra}
-
-Focus on:
-- What this technology is
-- Its key characteristics or advantages
-- Its typical applications
-
-Keep it factual and concise (max 100 words)."""
-        
-        else:  # company
-            prompt = f"""You are a battery industry analyst. Provide a concise 2-3 sentence description of the following company:
-
-Company Name: {name}
-Country: {extra}
-
-Focus on:
-- What this company does in the battery industry
-- Their specialization or key products
-- Their market position if well-known
-
-Keep it factual and concise (max 100 words). If this is a generated/fictional company name, provide a generic description based on the name pattern."""
+            prompt = f"""You are a battery technology expert. Provide a concise description:
+Technology Name: {name}, Category: {extra}.
+Explain what it is, its advantages, and applications.
+Answer in plain text without markdown formatting. Keep it under 100 words."""
+        else:
+            prompt = f"""You are a battery industry analyst. Provide a concise description:
+Company Name: {name}, Country: {extra}.
+Explain their role, key products, and market position.
+Answer in plain text without markdown formatting. Keep it under 100 words."""
         
         try:
-            # Ollama API 호출
             response = requests.post(
                 f"{self.ollama_url}/api/generate",
                 json={
@@ -138,153 +86,86 @@ Keep it factual and concise (max 100 words). If this is a generated/fictional co
                     "stream": False,
                     "options": {
                         "temperature": 0.7,
-                        "num_predict": 150
+                        "num_predict": 300  # [Modified] Increased length to prevent truncation
                     }
                 }
             )
-            
-            if response.status_code != 200:
-                raise Exception(f"Ollama API 오류: {response.status_code}")
-            
-            description = response.json()['response'].strip()
-            return description
-            
-        except Exception as e:
-            print(f"  ⚠️  설명 생성 실패: {e}")
-            # 폴백: 간단한 설명
-            if node_type == 'technology':
-                return f"{name} is a {extra.lower()} technology used in battery systems."
-            else:
-                return f"{name} is a battery industry company based in {extra}."
-    
+            if response.status_code != 200: return ""
+            return response.json()['response'].strip()
+        except Exception:
+            return ""
+
     def update_node_description(self, node_id: int, description: str):
-        """
-        노드에 설명을 업데이트합니다.
-        
-        Args:
-            node_id: 노드 ID
-            description: 저장할 설명
-        """
-        # Cypher에서 문자열 이스케이프 처리
+        # Escape single/double quotes
         escaped_desc = description.replace("'", "\\'").replace('"', '\\"')
         
-        query = f"""
-        MATCH (n) WHERE ID(n) = {node_id}
-        SET n.description = '{escaped_desc}'
-        """
-        
+        # Do not save if description is too short or empty (retry later)
+        if len(escaped_desc) < 5:
+            return False
+
+        query = f"MATCH (n) WHERE ID(n) = {node_id} SET n.description = '{escaped_desc}'"
         self.graph.query(query)
         self.processed_count += 1
+        return True
     
-    def enrich_technologies(self, limit: int = None):
-        """Technology 노드들에 설명을 추가합니다."""
-        print("\n🔋 Technology 노드 enrichment 시작...")
-        
-        nodes = self.get_nodes_without_description('Technology', limit)
+    def process_nodes(self, label: str, limit: int = None, force: bool = False):
+        print(f"\n🚀 Starting {label} node processing (Force={force})...")
+        nodes = self.get_nodes_to_process(label, limit, force)
         total = len(nodes)
         
         if total == 0:
-            print("  ✅ 모든 Technology 노드에 이미 설명이 있습니다.")
+            print(f"  ✅ No {label} nodes to update.")
             return
         
-        print(f"  📊 처리할 노드: {total}개")
+        print(f"  📊 Target: {total} nodes")
         
         for i, node in enumerate(nodes, 1):
-            print(f"  [{i}/{total}] {node['name']} ({node['extra']})...", end=" ")
+            name = node['name']
+            print(f"  [{i}/{total}] {name}...", end=" ", flush=True)
             
-            description = self.generate_description(
-                node['name'], 
-                node['extra'], 
-                'technology'
-            )
+            # Generate description
+            description = self.generate_description(name, node['extra'], label.lower())
             
-            self.update_node_description(node['id'], description)
-            print("✓")
+            # Update DB
+            success = self.update_node_description(node['id'], description)
             
-            # API Rate limit 방지 (필요시)
-            if i % 10 == 0:
-                time.sleep(1)
-        
-        print(f"  ✅ {total}개 Technology 노드 처리 완료\n")
-    
-    def enrich_companies(self, limit: int = None):
-        """Company 노드들에 설명을 추가합니다."""
-        print("\n🏢 Company 노드 enrichment 시작...")
-        
-        nodes = self.get_nodes_without_description('Company', limit)
-        total = len(nodes)
-        
-        if total == 0:
-            print("  ✅ 모든 Company 노드에 이미 설명이 있습니다.")
-            return
-        
-        print(f"  📊 처리할 노드: {total}개")
-        
-        for i, node in enumerate(nodes, 1):
-            print(f"  [{i}/{total}] {node['name']} ({node['extra']})...", end=" ")
+            if success:
+                # Print summary
+                clean_desc = description.replace('\n', ' ')
+                snippet = " ".join(clean_desc.split()[:8])
+                print(f"✓ -> {snippet}...")
+            else:
+                print("❌ Generation failed (empty response)")
             
-            description = self.generate_description(
-                node['name'], 
-                node['extra'], 
-                'company'
-            )
-            
-            self.update_node_description(node['id'], description)
-            print("✓")
-            
-            # API Rate limit 방지
-            if i % 10 == 0:
-                time.sleep(1)
-        
-        print(f"  ✅ {total}개 Company 노드 처리 완료\n")
-    
-    def run(self, limit: int = None):
-        """전체 enrichment 프로세스를 실행합니다."""
+    def run(self, limit: int = None, force: bool = False):
         print("=" * 60)
-        print("FalkorDB Graph Data Enrichment")
+        print("FalkorDB Graph Data Enrichment (Fixed)")
         print("=" * 60)
         
         start_time = time.time()
-        
-        self.enrich_technologies(limit)
-        self.enrich_companies(limit)
-        
+        self.process_nodes('Technology', limit, force)
+        self.process_nodes('Company', limit, force)
         elapsed = time.time() - start_time
         
         print("=" * 60)
-        print(f"✅ 전체 처리 완료!")
-        print(f"   처리된 노드: {self.processed_count}개")
-        print(f"   소요 시간: {elapsed:.1f}초")
+        print(f"✅ All done! ({self.processed_count} updated, {elapsed:.1f}s)")
         print("=" * 60)
 
-
 def main():
-    parser = argparse.ArgumentParser(description='FalkorDB 그래프에 설명을 자동 생성합니다 (Ollama 사용).')
-    parser.add_argument('--graph', default='EnergyGraph', help='그래프 이름 (default: EnergyGraph)')
-    parser.add_argument('--sample', type=int, help='샘플 모드: 각 타입별로 N개만 처리')
-    parser.add_argument('--full', action='store_true', help='전체 노드 처리')
-    parser.add_argument('--ollama-url', default='http://localhost:11434', help='Ollama API URL')
-    
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--graph', default='EnergyGraph')
+    parser.add_argument('--sample', type=int)
+    parser.add_argument('--full', action='store_true')
+    parser.add_argument('--force', action='store_true', help='Force overwrite existing descriptions')
+    parser.add_argument('--ollama-url', default='http://localhost:11434')
     args = parser.parse_args()
     
     if not args.sample and not args.full:
-        print("❌ --sample N 또는 --full 옵션을 선택하세요.")
-        print("   예: python 3_enrich_graph_data.py --sample 10")
-        print("\n💡 Ollama 설정:")
-        print("   ollama serve")
-        print(f"   ollama pull {LLM_MODEL}")
+        print("❌ Usage: python 2_enrich_graph_data.py --full --force")
         return
     
-    try:
-        enricher = GraphEnricher(graph_name=args.graph, ollama_url=args.ollama_url)
-        
-        limit = args.sample if args.sample else None
-        enricher.run(limit=limit)
-        
-    except Exception as e:
-        print(f"❌ 오류 발생: {e}")
-        raise
-
+    enricher = GraphEnricher(graph_name=args.graph, ollama_url=args.ollama_url)
+    enricher.run(limit=args.sample if args.sample else None, force=args.force)
 
 if __name__ == "__main__":
     main()

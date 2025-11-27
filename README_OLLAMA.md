@@ -1,35 +1,35 @@
-# 🎉 100% Ollama 기반 GraphRAG 시스템
+# 🎉 100% Ollama-based GraphRAG System
 
-## ✅ 최종 구성
+## ✅ Final Configuration
 
-**모든 단계가 100% Ollama로 작동하는 완전 무료 시스템입니다!**
+**A completely free system where every step operates 100% on Ollama!**
 
-| 단계 | 스크립트 | 사용 모델 | 비용 |
+| Step | Script | Model Used | Cost |
 |-----|---------|----------|------|
-| 0️⃣ 데이터 생성 | `0_generate_data.py` | - | 무료 |
-| 1️⃣ DB 로드 | `1_load_to_falkordb.py` | - | 무료 |
-| 2️⃣ **설명 생성** | `2_enrich_graph_data.py` | **qwen3:8b** | **무료** ✨ |
-| 3️⃣ **임베딩 생성** | `3_create_embeddings.py` | **nomic-embed-text** | **무료** ✨ |
-| 4️⃣ **GraphRAG 쿼리** | `4_graph-rag.py` | **nomic-embed-text + qwen3:8b** | **무료** ✨ |
-| 5️⃣ 네트워크 분석 | `5_analyze_network.py` | - | 무료 |
+| 0️⃣ Generate Data | `0_generate_data.py` | - | Free |
+| 1️⃣ Load to DB | `1_load_to_falkordb.py` | - | Free |
+| 2️⃣ **Generate Descriptions** | `2_enrich_graph_data.py` | **qwen3:8b** | **Free** ✨ |
+| 3️⃣ **Create Embeddings** | `3_create_embeddings.py` | **nomic-embed-text** | **Free** ✨ |
+| 4️⃣ **GraphRAG Query** | `4_graph-rag.py` | **nomic-embed-text + qwen3:8b** | **Free** ✨ |
+| 5️⃣ Network Analysis | `5_analyze_network.py` | - | Free |
 
-## 🚀 완전 무료 실행 가이드
+## 🚀 Completely Free Execution Guide
 
-### 1. Ollama 설치 및 모델 다운로드
+### 1. Install Ollama and Download Models
 
 ```bash
-# Ollama 설치 (macOS)
+# Install Ollama (macOS)
 brew install ollama
 
-# Ollama 서버 시작
+# Start Ollama Server
 ollama serve
 
-# 필요한 모델 다운로드
+# Download required models
 ollama pull qwen3:8b             # LLM (4.9GB)
-ollama pull nomic-embed-text     # 임베딩 (274MB)
+ollama pull nomic-embed-text     # Embedding (274MB)
 ```
 
-### 2. FalkorDB 실행
+### 2. Run FalkorDB
 
 ```bash
 docker run -p 6379:6379 -p 3001:3000 -it --rm \
@@ -37,253 +37,253 @@ docker run -p 6379:6379 -p 3001:3000 -it --rm \
   falkordb/falkordb
 ```
 
-### 3. 전체 파이프라인 실행
+### 3. Run Full Pipeline
 
 ```bash
-# Step 0: 데이터 생성 (배터리 산업 데이터)
+# Step 0: Generate Data (Battery Industry Data)
 python 0_generate_data.py
 
-# Step 1: FalkorDB에 로드
+# Step 1: Load to FalkorDB
 python 1_load_to_falkordb.py
 
-# Step 2: 노드 설명 생성 (Ollama LLM - 무료!)
+# Step 2: Generate Node Descriptions (Ollama LLM - Free!)
 python 2_enrich_graph_data.py
 
-# Step 3: 벡터 임베딩 생성 (Ollama Embedding - 무료!)
+# Step 3: Create Vector Embeddings (Ollama Embedding - Free!)
 python 3_create_embeddings.py
 
-# Step 4: GraphRAG 쿼리 시스템 (Ollama - 무료!)
+# Step 4: GraphRAG Query System (Ollama - Free!)
 python 4_graph-rag.py
 
-# Step 5: 네트워크 분석 (PageRank, Degree Centrality)
+# Step 5: Network Analysis (PageRank, Degree Centrality)
 python 5_analyze_network.py
 ```
 
-## 💰 최종 비용 비교
+## 💰 Final Cost Comparison
 
-| 항목 | OpenAI 방식 | 100% Ollama |
+| Item | OpenAI Method | 100% Ollama |
 |------|------------|-------------|
-| LLM 설명 생성 | ~$1-2 | **무료** |
-| 임베딩 생성 | ~$0.5-1 | **무료** |
-| 쿼리당 비용 | ~$0.001-0.005 | **무료** |
-| **총 초기 비용** | **$2-5** | **$0** 🎉 |
-| **월간 사용 비용** | **$10-50** | **$0** 🎉 |
+| LLM Description Generation | ~$1-2 | **Free** |
+| Embedding Generation | ~$0.5-1 | **Free** |
+| Cost per Query | ~$0.001-0.005 | **Free** |
+| **Total Initial Cost** | **$2-5** | **$0** 🎉 |
+| **Monthly Usage Cost** | **$10-50** | **$0** 🎉 |
 
-## 🎯 시스템 특징
+## 🎯 System Features
 
-### 장점
-- ✅ **완전 무료** - API 비용 전혀 없음
-- ✅ **데이터 프라이버시** - 모든 데이터가 로컬에 유지
-- ✅ **오프라인 실행** - 인터넷 불필요 (모델 다운로드 후)
-- ✅ **한국어 우수** - qwen3는 한국어 성능이 뛰어남
-- ✅ **커스터마이징** - 원하는 모델로 쉽게 교체 가능
-- ✅ **그래프 분석** - PageRank, Centrality 등 네트워크 분석 기능
+### Advantages
+- ✅ **Completely Free** - No API costs at all
+- ✅ **Data Privacy** - All data remains local
+- ✅ **Offline Execution** - No internet required (after model download)
+- ✅ **Excellent Korean Support** - qwen3 has excellent Korean performance
+- ✅ **Customizable** - Easily swap with desired models
+- ✅ **Graph Analysis** - Network analysis features like PageRank, Centrality
 
-### 시스템 요구사항
-- **RAM**: 16GB 이상 (권장 24GB)
-- **디스크**: 약 5-6GB (모델)
-- **CPU/GPU**: M4 Pro의 Metal GPU 자동 활용
-- **Docker**: FalkorDB 실행 필요
+### System Requirements
+- **RAM**: 16GB or more (24GB recommended)
+- **Disk**: Approx. 5-6GB (Models)
+- **CPU/GPU**: Automatically utilizes M4 Pro's Metal GPU
+- **Docker**: Required to run FalkorDB
 
-## 📊 성능
+## 📊 Performance
 
-### 속도 (M4 Pro 기준)
-- **데이터 생성**: ~1초 (20개 회사, 100개 기술, 300개 관계)
-- **DB 로드**: ~5-10초
-- **설명 생성**: ~2-3초/노드
-- **임베딩 생성**: ~0.1-0.5초/노드
-- **GraphRAG 쿼리**: ~3-5초/질문
+### Speed (Based on M4 Pro)
+- **Data Generation**: ~1 sec (20 companies, 100 technologies, 300 relations)
+- **DB Load**: ~5-10 sec
+- **Description Generation**: ~2-3 sec/node
+- **Embedding Generation**: ~0.1-0.5 sec/node
+- **GraphRAG Query**: ~3-5 sec/question
 
-### 품질
-- **설명 정확도**: 산업 도메인에 적합한 설명 생성
-- **검색 정확도**: 코사인 유사도 기반 정확한 검색
-- **답변 품질**: 배터리 산업 컨텍스트 충실히 반영
+### Quality
+- **Description Accuracy**: Generates descriptions suitable for the industrial domain
+- **Search Accuracy**: Accurate search based on cosine similarity
+- **Answer Quality**: Faithfully reflects the battery industry context
 
-## 🔧 모델 변경
+## 🔧 Changing Models
 
-원하는 Ollama 모델로 쉽게 변경 가능:
+Easily switch to any desired Ollama model:
 
-### LLM 변경 (설명 생성 & 답변 생성)
+### Change LLM (Description & Answer Generation)
 
 **`2_enrich_graph_data.py`:**
 ```python
-# 라인 13
-LLM_MODEL = 'qwen3:8b'  # 기본값
+# Line 13
+LLM_MODEL = 'qwen3:8b'  # Default
 
-# 다른 옵션:
-LLM_MODEL = 'llama3.1:8b'   # 영어에 강함
-LLM_MODEL = 'gemma2:9b'     # Google 모델
-LLM_MODEL = 'qwen2.5:14b'   # 더 나은 성능 (RAM 더 필요)
+# Other options:
+LLM_MODEL = 'llama3.1:8b'   # Strong in English
+LLM_MODEL = 'gemma2:9b'     # Google model
+LLM_MODEL = 'qwen2.5:14b'   # Better performance (Requires more RAM)
 ```
 
 **`4_graph-rag.py`:**
 ```python
-# 라인 17
-CHAT_MODEL = 'qwen3:8b'  # 기본값
+# Line 17
+CHAT_MODEL = 'qwen3:8b'  # Default
 ```
 
-### 임베딩 모델 변경
+### Change Embedding Model
 
 **`3_create_embeddings.py`:**
 ```python
-# 라인 22
-EMBED_MODEL = 'nomic-embed-text:latest'  # 기본값
+# Line 22
+EMBED_MODEL = 'nomic-embed-text:latest'  # Default
 
-# 다른 옵션:
-EMBED_MODEL = 'mxbai-embed-large'  # 1024차원
-EMBED_MODEL = 'all-minilm'         # 384차원, 빠름
+# Other options:
+EMBED_MODEL = 'mxbai-embed-large'  # 1024 dimensions
+EMBED_MODEL = 'all-minilm'         # 384 dimensions, fast
 ```
 
 **`4_graph-rag.py`:**
 ```python
-# 라인 16
-EMBED_MODEL = 'nomic-embed-text:latest'  # 기본값
+# Line 16
+EMBED_MODEL = 'nomic-embed-text:latest'  # Default
 ```
 
-## 📝 파일 구조
+## 📝 File Structure
 
 ```
 251125_FalkorDB/
 ├── data/
-│   └── csv/                       # CSV 데이터
-│       ├── companies.csv          # 회사 정보 (name, country)
-│       ├── technologies.csv       # 기술 정보 (name, category)
-│       └── relations.csv          # 관계 정보 (START_ID, END_ID, TYPE)
+│   └── csv/                       # CSV Data
+│       ├── companies.csv          # Company info (name, country)
+│       ├── technologies.csv       # Technology info (name, category)
+│       └── relations.csv          # Relationship info (START_ID, END_ID, TYPE)
 │
-├── 0_FalkorDB_intro.ipynb        # FalkorDB 소개 & 튜토리얼
+├── 0_FalkorDB_intro.ipynb        # FalkorDB Intro & Tutorial
 │
-├── 0_generate_data.py            # 배터리 산업 데이터 생성
-├── 1_load_to_falkordb.py         # CSV → FalkorDB 로드
-├── 2_enrich_graph_data.py        # LLM으로 노드 설명 생성 (Ollama)
-├── 3_create_embeddings.py        # 벡터 임베딩 생성 (Ollama)
-├── 4_graph-rag.py                # GraphRAG 쿼리 시스템 (Ollama)
-├── 5_analyze_network.py          # 네트워크 분석 (PageRank, Centrality)
+├── 0_generate_data.py            # Generate Battery Industry Data
+├── 1_load_to_falkordb.py         # CSV → Load to FalkorDB
+├── 2_enrich_graph_data.py        # Generate Node Descriptions with LLM (Ollama)
+├── 3_create_embeddings.py        # Create Vector Embeddings (Ollama)
+├── 4_graph-rag.py                # GraphRAG Query System (Ollama)
+├── 5_analyze_network.py          # Network Analysis (PageRank, Centrality)
 │
-├── README.md                      # 프로젝트 전체 설명
-├── README_OLLAMA.md              # Ollama 가이드 (이 문서)
-└── FILE_STRUCTURE.md             # 파일 구조 설명
+├── README.md                      # Project Overview
+├── README_OLLAMA.md              # Ollama Guide (This Document)
+└── FILE_STRUCTURE.md             # File Structure Description
 ```
 
-## 🎬 사용 예시
+## 🎬 Usage Examples
 
-### GraphRAG 쿼리 (4_graph-rag.py)
+### GraphRAG Query (4_graph-rag.py)
 
 ```bash
 $ python 4_graph-rag.py
 
-🤖 Agent 가동 (Graph: EnergyGraph)
-📥 데이터 로딩 중... ✅ 120개 노드 로드 완료
+🤖 Agent Running (Graph: EnergyGraph)
+📥 Loading data... ✅ 120 nodes loaded
 
-💬 질문: Sodium-Ion 배터리를 개발하는 곳은?
-🔍 분석 중...
-🧠 답변 생성 중...
+💬 Question: Who develops Sodium-Ion batteries?
+🔍 Analyzing...
+🧠 Generating answer...
 
 ============================================================
-🤖 AI 답변:
-Sodium-Ion 배터리는 [검색된 회사명]에서 개발하고 있습니다. 
-이 기술은 리튬 이온 배터리의 대안으로 주목받고 있으며, 
-[관련 기술 정보]...
+🤖 AI Answer:
+Sodium-Ion batteries are developed by [Searched Company Name].
+This technology is gaining attention as an alternative to Lithium-Ion batteries,
+[Related Technology Info]...
 ============================================================
 ```
 
-### 네트워크 분석 (5_analyze_network.py)
+### Network Analysis (5_analyze_network.py)
 
 ```bash
 $ python 5_analyze_network.py
 
-=== 1. 단순 인기도 (Degree Centrality) TOP 5 ===
-가장 많은 회사가 매달려 있는 기술을 찾습니다.
-1위: NCM Battery (개발사 8개)
-2위: LFP Battery (개발사 6개)
+=== 1. Degree Centrality TOP 5 ===
+Finding technologies with the most developing companies.
+Rank 1: NCM Battery (8 developers)
+Rank 2: LFP Battery (6 developers)
 ...
 
-=== 2. 구조적 영향력 (PageRank) TOP 5 ===
-FalkorDB의 알고리즘 엔진(GraphBLAS)을 사용하여 PageRank를 계산합니다.
-1위: NCM Battery (Score: 0.125432)
-2위: LFP Battery (Score: 0.098765)
+=== 2. PageRank (Structural Influence) TOP 5 ===
+Calculating PageRank using FalkorDB's algorithm engine (GraphBLAS).
+Rank 1: NCM Battery (Score: 0.125432)
+Rank 2: LFP Battery (Score: 0.098765)
 ...
 ```
 
-## 🚨 문제 해결
+## 🚨 Troubleshooting
 
-### Ollama 서버 연결 실패
+### Ollama Server Connection Failed
 ```bash
-# 서버 시작
+# Start Server
 ollama serve
 
-# 백그라운드 실행
+# Run in Background
 nohup ollama serve &
 
-# 서버 상태 확인
+# Check Server Status
 curl http://localhost:11434/api/tags
 ```
 
-### 모델 없음 오류
+### Model Not Found Error
 ```bash
-# 모델 다운로드
+# Download Models
 ollama pull qwen3:8b
 ollama pull nomic-embed-text
 
-# 설치된 모델 확인
+# Check Installed Models
 ollama list
 ```
 
-### FalkorDB 연결 실패
+### FalkorDB Connection Failed
 ```bash
-# FalkorDB 실행 확인
+# Check FalkorDB Execution
 docker ps | grep falkordb
 
-# FalkorDB 재시작
+# Restart FalkorDB
 docker run -p 6379:6379 -p 3001:3000 -it --rm \
   -v ./data:/var/lib/falkordb/data \
   falkordb/falkordb
 ```
 
-### 메모리 부족
-- 더 작은 모델 사용: `qwen3:3b` 또는 `llama3.1:3b`
-- 다른 프로그램 종료
-- 노드 개수 줄이기 (0_generate_data.py의 설정 변경)
+### Out of Memory
+- Use smaller models: `qwen3:3b` or `llama3.1:3b`
+- Close other programs
+- Reduce number of nodes (Modify settings in 0_generate_data.py)
 
-### 느린 속도
-- GPU 확인: `ollama ps` (Metal 사용 중인지 확인)
-- 모델 크기 축소
-- 배치 크기 증가 (스크립트 수정)
+### Slow Speed
+- Check GPU: `ollama ps` (Check if Metal is being used)
+- Reduce model size
+- Increase batch size (Modify scripts)
 
-## 📚 참고 자료
+## 📚 References
 
-- [Ollama 공식 사이트](https://ollama.ai/)
-- [Qwen3 모델 문서](https://qwen.readthedocs.io/)
+- [Ollama Official Site](https://ollama.ai/)
+- [Qwen3 Model Documentation](https://qwen.readthedocs.io/)
 - [Nomic Embed Text](https://www.nomic.ai/blog/posts/nomic-embed-text-v1)
-- [FalkorDB 문서](https://docs.falkordb.com/)
-- [GraphBLAS 알고리즘](https://docs.falkordb.com/graph_algorithms.html)
+- [FalkorDB Documentation](https://docs.falkordb.com/)
+- [GraphBLAS Algorithms](https://docs.falkordb.com/graph_algorithms.html)
 
-## 🔍 주요 기능 상세
+## 🔍 Key Features Detail
 
-### 1. 데이터 생성 (0_generate_data.py)
-- 배터리 산업 관련 회사, 기술, 관계 데이터 생성
-- 조정 가능한 노드 개수 (NUM_COMPANIES, NUM_TECHNOLOGIES, NUM_RELATIONS)
-- 실제 존재하는 회사와 합성 데이터 조합
+### 1. Data Generation (0_generate_data.py)
+- Generates company, technology, and relationship data for the battery industry
+- Configurable node counts (NUM_COMPANIES, NUM_TECHNOLOGIES, NUM_RELATIONS)
+- Combines real existing companies with synthetic data
 
-### 2. 그래프 데이터 강화 (2_enrich_graph_data.py)
-- Ollama LLM을 사용하여 각 노드에 설명 자동 생성
-- Technology: 기술적 특징, 용도, 장단점 설명
-- Company: 회사 정보, 주요 사업, 특징 설명
+### 2. Graph Data Enrichment (2_enrich_graph_data.py)
+- Automatically generates descriptions for each node using Ollama LLM
+- Technology: Technical features, uses, pros/cons description
+- Company: Company info, main business, characteristics description
 
-### 3. 벡터 임베딩 (3_create_embeddings.py)
-- Ollama embedding API로 텍스트 → 벡터 변환
-- DB 인덱스 불필요 (데이터만 저장)
-- 메모리 효율적인 처리
+### 3. Vector Embeddings (3_create_embeddings.py)
+- Converts text → vector using Ollama embedding API
+- No DB index required (Stores data only)
+- Memory-efficient processing
 
 ### 4. GraphRAG (4_graph-rag.py)
-- **Guaranteed RAG**: DB 인덱스 의존성 제거
-- Python 내부에서 코사인 유사도 직접 계산
-- 그래프 관계 정보 자동 확장
-- 컨텍스트 기반 정확한 답변 생성
+- **Guaranteed RAG**: Removes DB index dependency
+- Direct cosine similarity calculation within Python
+- Automatic expansion of graph relationship information
+- Accurate answer generation based on context
 
-### 5. 네트워크 분석 (5_analyze_network.py)
-- Degree Centrality: 연결 개수 기반 중요도
-- PageRank: 구조적 영향력 분석 (GraphBLAS)
+### 5. Network Analysis (5_analyze_network.py)
+- Degree Centrality: Importance based on connection count
+- PageRank: Structural influence analysis (GraphBLAS)
 
 ---
 
-**완전히 무료로 강력한 GraphRAG 시스템을 사용하세요!** 🚀
+**Use a powerful GraphRAG system completely for free!** 🚀

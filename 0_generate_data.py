@@ -3,11 +3,11 @@ import os
 import random
 
 # ========================================
-# 📊 데이터 생성 설정 (여기서 노드 개수 조정)
+# 📊 Data Generation Settings (Adjust node counts here)
 # ========================================
-NUM_COMPANIES = 20      # 생성할 회사 개수
-NUM_TECHNOLOGIES = 100  # 생성할 기술 개수
-NUM_RELATIONS = 300     # 생성할 관계 개수
+NUM_COMPANIES = 20      # Number of companies to generate
+NUM_TECHNOLOGIES = 100  # Number of technologies to generate
+NUM_RELATIONS = 300     # Number of relations to generate
 
 # Base Data
 base_companies = [
@@ -143,30 +143,30 @@ if __name__ == "__main__":
     base_path = "/Users/donghakim/python_workspace/251125_FalkorDB/data/csv"
     
     print("=" * 60)
-    print("FalkorDB 데이터 생성")
+    print("FalkorDB Data Generation")
     print("=" * 60)
-    print(f"📊 설정:")
-    print(f"   - 회사: {NUM_COMPANIES}개")
-    print(f"   - 기술: {NUM_TECHNOLOGIES}개")
-    print(f"   - 관계: {NUM_RELATIONS}개")
+    print(f"📊 Settings:")
+    print(f"   - Companies: {NUM_COMPANIES}")
+    print(f"   - Technologies: {NUM_TECHNOLOGIES}")
+    print(f"   - Relations: {NUM_RELATIONS}")
     print("=" * 60)
     
     print("\n🏢 Generating companies...")
     companies = generate_companies(NUM_COMPANIES) 
     write_csv(os.path.join(base_path, 'companies.csv'), ['name', 'country'], companies)
-    print(f"   ✅ {len(companies)}개 회사 생성 완료")
+    print(f"   ✅ {len(companies)} companies generated")
 
     print("\n🔋 Generating technologies...")
     technologies = generate_technologies(NUM_TECHNOLOGIES)
     write_csv(os.path.join(base_path, 'technologies.csv'), ['name', 'category'], technologies)
-    print(f"   ✅ {len(technologies)}개 기술 생성 완료")
+    print(f"   ✅ {len(technologies)} technologies generated")
 
     print("\n🔗 Generating relations...")
     relations = generate_relations(companies, technologies, NUM_RELATIONS)
     write_relations_csv(os.path.join(base_path, 'relations.csv'), ['company', 'technology'], relations)
-    print(f"   ✅ {len(relations)}개 관계 생성 완료")
+    print(f"   ✅ {len(relations)} relations generated")
     
     print("\n" + "=" * 60)
-    print("✅ 데이터 생성 완료!")
-    print(f"📁 저장 위치: {base_path}")
+    print("✅ Data generation complete!")
+    print(f"📁 Save location: {base_path}")
     print("=" * 60)
