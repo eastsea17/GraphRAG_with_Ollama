@@ -33,10 +33,10 @@ This directory contains a Battery Industry GraphRAG system using FalkorDB.
 
 ```bash
 # Install required packages
-pip install falkordb openai
+pip install falkordb
 
-# Set OpenAI API Key
-export OPENAI_API_KEY='your-api-key-here'
+# Install Ollama (if not already installed)
+# Visit https://ollama.com/download
 ```
 
 ### 2. Run FalkorDB
@@ -132,7 +132,7 @@ Tesla develops LFP Battery and BMS technologies...
 ```
 User Question
     ↓
-1. Query Embedding (OpenAI)
+1. Query Embedding (Ollama)
     ↓
 2. Vector Search (FalkorDB)
    - Search Technology nodes
@@ -146,7 +146,7 @@ User Question
    - Collect searched node info
    - Add graph relationship info
     ↓
-5. LLM Answer Generation (GPT-4)
+5. LLM Answer Generation (Ollama - DeepSeek/Llama3)
     ↓
 Final Answer
 ```
@@ -157,7 +157,7 @@ Final Answer
 - `--graph`: Graph name (Default: EnergyGraph)
 - `--sample N`: Sample mode (Process only N items per type)
 - `--full`: Process all nodes
-- `--api-key`: OpenAI API Key (Instead of environment variable)
+- `--ollama-url`: Ollama URL (Default: http://localhost:11434)
 
 ### create_embeddings.py
 Supports same options
@@ -166,7 +166,7 @@ Supports same options
 ```python
 rag = GraphRAG(
     graph_name='EnergyGraph',  # Graph name
-    api_key='...'              # API Key (Optional)
+    ollama_url='http://localhost:11434' # Ollama URL
 )
 
 answer = rag.query(
@@ -199,9 +199,10 @@ YIELD node RETURN node
 
 ## 🐛 Troubleshooting
 
-### "OpenAI API key required"
+### "Ollama Connection Failed"
+Ensure Ollama is running:
 ```bash
-export OPENAI_API_KEY='sk-...'
+ollama serve
 ```
 
 ### "FalkorDB Connection Failed"
@@ -215,16 +216,13 @@ Run `create_embeddings.py` first.
 
 ## 💰 Estimated Costs
 
-- **Description Generation**: ~13,000 nodes × GPT-4-mini → Approx. $1-2
-- **Embedding Generation**: ~13,000 nodes × text-embedding-3-small → Approx. $0.5-1
-- **Cost per Query**: Approx. $0.001-0.005
-
-Total Initial Setup Cost: **Approx. $2-5**
+- **Free**: When using local Ollama models.
+- **Hardware**: Requires sufficient RAM (16GB+ recommended) for running LLMs locally.
 
 ## 📚 Additional Info
 
 - [FalkorDB Documentation](https://docs.falkordb.com/)
-- [OpenAI API Documentation](https://platform.openai.com/docs/)
+- [Ollama Documentation](https://ollama.com/)
 - [GraphRAG Concept](https://www.microsoft.com/en-us/research/project/graphrag/)
 
 ## 🤝 Contribution
