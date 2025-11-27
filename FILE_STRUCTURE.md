@@ -22,6 +22,7 @@ This project is a **100% Ollama-based GraphRAG system** that builds a battery in
 ├── 3_create_embeddings.py           # Step 3: Create Embeddings (Ollama)
 ├── 4_graph-rag.py                   # Step 4: GraphRAG Query System
 ├── 5_analyze_network.py             # Step 5: Network Analysis
+├── config.py                        # Centralized Configuration
 │
 ├── README.md                         # Project Overview
 ├── README_OLLAMA.md                 # Ollama Setup Guide
@@ -100,7 +101,7 @@ python 1_load_to_falkordb.py
 #### `2_enrich_graph_data.py` - Generate Descriptions (Ollama LLM)
 **Function**: Adds AI-generated descriptions to graph nodes
 
-**Model Used**: `qwen3:8b` (Ollama LLM)
+**Model Used**: `deepseek-r1:8b` (Ollama LLM)
 
 **Key Operations**:
 1. Retrieve nodes without descriptions
@@ -116,7 +117,8 @@ python 2_enrich_graph_data.py
 
 **Configuration**:
 ```python
-LLM_MODEL = 'qwen3:8b'  # Can be changed at line 13
+# Modify config.py
+LLM_MODEL = 'deepseek-r1:8b'
 ```
 
 ---
@@ -148,7 +150,7 @@ python 3_create_embeddings.py
 
 **Models Used**:
 - Embedding: `nomic-embed-text:latest`
-- LLM: `qwen3:8b`
+- LLM: `deepseek-r1:8b`
 
 **Key Operations**:
 1. Cache all node data in memory
@@ -208,7 +210,7 @@ Rank 2: LFP Battery (Score: 0.098765)
 
 ```bash
 # Download Ollama models
-ollama pull qwen3:8b
+ollama pull deepseek-r1:8b
 ollama pull nomic-embed-text
 
 # Run FalkorDB
@@ -282,14 +284,13 @@ CATL,LFP Battery,DEVELOPS
 
 ## ⚙️ Key Configuration File Locations
 
-| Setting Item | File | Line | Default Value |
-|---------|------|------|--------|
-| Data Count | `0_generate_data.py` | 8-10 | 20/100/300 |
-| LLM Model | `2_enrich_graph_data.py` | 13 | `qwen3:8b` |
-| Embedding Model | `3_create_embeddings.py` | 22 | `nomic-embed-text:latest` |
-| Embedding Model | `4_graph-rag.py` | 16 | `nomic-embed-text:latest` |
-| LLM Model | `4_graph-rag.py` | 17 | `qwen3:8b` |
-| Graph Name | All Files | - | `EnergyGraph` |
+| Setting Item | File | Default Value |
+|---------|------|--------|
+| Data Count | `0_generate_data.py` | 20/100/300 |
+| LLM Model | `config.py` | `deepseek-r1:8b` |
+| Embedding Model | `config.py` | `nomic-embed-text:latest` |
+| Chat Model | `config.py` | `deepseek-r1:8b` |
+| Graph Name | `config.py` | `EnergyGraph` |
 
 ---
 
