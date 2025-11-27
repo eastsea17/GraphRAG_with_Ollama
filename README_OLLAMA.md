@@ -8,9 +8,9 @@
 |-----|---------|----------|------|
 | 0️⃣ Generate Data | `0_generate_data.py` | - | Free |
 | 1️⃣ Load to DB | `1_load_to_falkordb.py` | - | Free |
-| 2️⃣ **Generate Descriptions** | `2_enrich_graph_data.py` | **qwen3:8b** | **Free** ✨ |
+| 2️⃣ **Generate Descriptions** | `2_enrich_graph_data.py` | **deepseek-r1:8b** | **Free** ✨ |
 | 3️⃣ **Create Embeddings** | `3_create_embeddings.py` | **nomic-embed-text** | **Free** ✨ |
-| 4️⃣ **GraphRAG Query** | `4_graph-rag.py` | **nomic-embed-text + qwen3:8b** | **Free** ✨ |
+| 4️⃣ **GraphRAG Query** | `4_graph-rag.py` | **nomic-embed-text + deepseek-r1:8b** | **Free** ✨ |
 | 5️⃣ Network Analysis | `5_analyze_network.py` | - | Free |
 
 ## 🚀 Completely Free Execution Guide
@@ -25,7 +25,7 @@ brew install ollama
 ollama serve
 
 # Download required models
-ollama pull qwen3:8b             # LLM (4.9GB)
+ollama pull deepseek-r1:8b             # LLM (4.9GB)
 ollama pull nomic-embed-text     # Embedding (274MB)
 ```
 
@@ -59,15 +59,14 @@ python 4_graph-rag.py
 python 5_analyze_network.py
 ```
 
-## 💰 Final Cost Comparison
+## 💰 Cost Analysis
 
-| Item | OpenAI Method | 100% Ollama |
-|------|------------|-------------|
-| LLM Description Generation | ~$1-2 | **Free** |
-| Embedding Generation | ~$0.5-1 | **Free** |
-| Cost per Query | ~$0.001-0.005 | **Free** |
-| **Total Initial Cost** | **$2-5** | **$0** 🎉 |
-| **Monthly Usage Cost** | **$10-50** | **$0** 🎉 |
+| Item | Cost |
+|------|------|
+| LLM Description Generation | **Free** |
+| Embedding Generation | **Free** |
+| Cost per Query | **Free** |
+| **Total Cost** | **$0** 🎉 |
 
 ## 🎯 System Features
 
@@ -101,43 +100,23 @@ python 5_analyze_network.py
 
 ## 🔧 Changing Models
 
-Easily switch to any desired Ollama model:
+Easily switch to any desired Ollama model by modifying `config.py`:
 
-### Change LLM (Description & Answer Generation)
-
-**`2_enrich_graph_data.py`:**
+**`config.py`:**
 ```python
-# Line 13
-LLM_MODEL = 'qwen3:8b'  # Default
+# LLM Model (Description & Answer Generation)
+LLM_MODEL = 'deepseek-r1:8b'  # Default
+# LLM_MODEL = 'llama3.1:8b'   # Strong in English
+# LLM_MODEL = 'gemma2:9b'     # Google model
+# LLM_MODEL = 'qwen2.5:14b'   # Better performance (Requires more RAM)
 
-# Other options:
-LLM_MODEL = 'llama3.1:8b'   # Strong in English
-LLM_MODEL = 'gemma2:9b'     # Google model
-LLM_MODEL = 'qwen2.5:14b'   # Better performance (Requires more RAM)
-```
+# Chat Model (RAG Chat)
+CHAT_MODEL = 'deepseek-r1:8b'
 
-**`4_graph-rag.py`:**
-```python
-# Line 17
-CHAT_MODEL = 'qwen3:8b'  # Default
-```
-
-### Change Embedding Model
-
-**`3_create_embeddings.py`:**
-```python
-# Line 22
+# Embedding Model
 EMBED_MODEL = 'nomic-embed-text:latest'  # Default
-
-# Other options:
-EMBED_MODEL = 'mxbai-embed-large'  # 1024 dimensions
-EMBED_MODEL = 'all-minilm'         # 384 dimensions, fast
-```
-
-**`4_graph-rag.py`:**
-```python
-# Line 16
-EMBED_MODEL = 'nomic-embed-text:latest'  # Default
+# EMBED_MODEL = 'mxbai-embed-large'  # 1024 dimensions
+# EMBED_MODEL = 'all-minilm'         # 384 dimensions, fast
 ```
 
 ## 📝 File Structure
@@ -158,6 +137,7 @@ EMBED_MODEL = 'nomic-embed-text:latest'  # Default
 ├── 3_create_embeddings.py        # Create Vector Embeddings (Ollama)
 ├── 4_graph-rag.py                # GraphRAG Query System (Ollama)
 ├── 5_analyze_network.py          # Network Analysis (PageRank, Centrality)
+├── config.py                     # Centralized Configuration
 │
 ├── README.md                      # Project Overview
 ├── README_OLLAMA.md              # Ollama Guide (This Document)
@@ -221,7 +201,7 @@ curl http://localhost:11434/api/tags
 ### Model Not Found Error
 ```bash
 # Download Models
-ollama pull qwen3:8b
+ollama pull deepseek-r1:8b
 ollama pull nomic-embed-text
 
 # Check Installed Models
@@ -240,7 +220,7 @@ docker run -p 6379:6379 -p 3001:3000 -it --rm \
 ```
 
 ### Out of Memory
-- Use smaller models: `qwen3:3b` or `llama3.1:3b`
+- Use smaller models: `deepseek-r1:1.5b` or `llama3.2:1b`
 - Close other programs
 - Reduce number of nodes (Modify settings in 0_generate_data.py)
 
@@ -252,7 +232,7 @@ docker run -p 6379:6379 -p 3001:3000 -it --rm \
 ## 📚 References
 
 - [Ollama Official Site](https://ollama.ai/)
-- [Qwen3 Model Documentation](https://qwen.readthedocs.io/)
+- [DeepSeek Model Documentation](https://github.com/deepseek-ai/DeepSeek-LLM)
 - [Nomic Embed Text](https://www.nomic.ai/blog/posts/nomic-embed-text-v1)
 - [FalkorDB Documentation](https://docs.falkordb.com/)
 - [GraphBLAS Algorithms](https://docs.falkordb.com/graph_algorithms.html)
