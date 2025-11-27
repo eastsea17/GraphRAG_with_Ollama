@@ -11,24 +11,48 @@ This script generates and stores vector embeddings for nodes (Company, Technolog
 
 import time
 import requests
+import json
+import os
 from falkordb import FalkorDB
-
-# ==========================================
-# ⚙️ Settings (Adjust to your environment)
-# ==========================================
-GRAPH_NAME = 'EnergyGraph'
-OLLAMA_URL = 'http://localhost:11434'
-EMBED_MODEL = 'nomic-embed-text:latest'  # Installed embedding model name
+import config
 
 class EmbeddingCreator:
     def __init__(self):
-        print(f"🔌 Connecting to FalkorDB... (Graph: {GRAPH_NAME})")
+        print(f"🔌 Connecting to FalkorDB... (Graph: {config.GRAPH_NAME})")
         try:
-            self.db = FalkorDB(host='localhost', port=6379)
-            self.graph = self.db.select_graph(GRAPH_NAME)
+            self.db = FalkorDB(host=config.FALKORDB_HOST, port=config.FALKORDB_PORT)
+            self.graph = self.db.select_graph(config.GRAPH_NAME)
         except Exception as e:
             print(f"❌ Connection failed: {e}")
             exit()
+        
+        # Initialize cache
+        self.cache_path = os.path.join(config.EMBEDDING_DIR, config.CACHE_FILE)
+        self.cache = self.load_cache()
+
+    def load_cache(self):
+        """Load embedding cache from file"""
+        if not os.path.exists(config.EMBEDDING_DIR):
+            os.makedirs(config.EMBEDDING_DIR)
+            
+        if os.path.exists(self.cache_path):
+            try:
+                with open(self.cache_path, 'r', encoding='utf-8') as f:
+                    print(f"📂 Loading cache from {self.cache_path}...")
+                    return json.load(f)
+            except Exception as e:
+                print(f"⚠️ Failed to load cache: {e}")
+                return {}
+        return {}
+
+    def save_cache(self):
+        """Save embedding cache to file"""
+        try:
+            with open(self.cache_path, 'w', encoding='utf-8') as f:
+                json.dump(self.cache, f, ensure_ascii=False, indent=2)
+            # print("💾 Cache saved.")
+        except Exception as e:
+            print(f"⚠️ Failed to save cache: {e}")
 
     def get_nodes_without_embedding(self):
         """Retrieve nodes without embeddings"""
@@ -43,8 +67,8 @@ class EmbeddingCreator:
         """Convert text to vector using Ollama API"""
         try:
             res = requests.post(
-                f"{OLLAMA_URL}/api/embeddings",
-                json={"model": EMBED_MODEL, "prompt": text}
+                f"{config.OLLAMA_URL}/api/embeddings",
+                json={"model": config.EMBED_MODEL, "prompt": text}
             )
             if res.status_code == 200:
                 return res.json()['embedding']
@@ -83,8 +107,14 @@ class EmbeddingCreator:
             # Print progress
             print(f"  [{i}/{total}] Processing: {name[:30]}...", end="\r")
 
-            # 1. Generate embedding
-            vec = self.generate_embedding(text_to_embed)
+            # 1. Generate embedding (Check cache first)
+            if text_to_embed in self.cache:
+                vec = self.cache[text_to_embed]
+                # print(f"  [Cache Hit] {name[:20]}...", end="\r")
+            else:
+                vec = self.generate_embedding(text_to_embed)
+                if vec:
+                    self.cache[text_to_embed] = vec
             
             if vec:
                 # 2. Update DB (Use Params for safe storage)
@@ -95,6 +125,10 @@ class EmbeddingCreator:
             
             # Short wait to control API load
             # time.sleep(0.01) 
+
+        # Save cache at the end
+        self.save_cache()
+        print(f"\n💾 Cache saved to {self.cache_path}")
 
         print(f"\n\n✨ Complete! Successfully updated {success_count}/{total} nodes.")
         self.verify_status()

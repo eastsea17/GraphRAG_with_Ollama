@@ -11,10 +11,7 @@ Usage:
 import csv
 import os
 from falkordb import FalkorDB
-
-# Settings
-GRAPH_NAME = 'EnergyGraph'
-CSV_DIR = 'data/csv'
+import config
 
 def load_data_to_falkordb():
     """Load CSV data into FalkorDB."""
@@ -26,9 +23,9 @@ def load_data_to_falkordb():
     # Connect to FalkorDB
     print("\n🔌 Connecting to FalkorDB...")
     try:
-        db = FalkorDB(host='localhost', port=6379)
-        g = db.select_graph(GRAPH_NAME)
-        print(f"✅ Connected to graph '{GRAPH_NAME}'")
+        db = FalkorDB(host=config.FALKORDB_HOST, port=config.FALKORDB_PORT)
+        g = db.select_graph(config.GRAPH_NAME)
+        print(f"✅ Connected to graph '{config.GRAPH_NAME}'")
     except Exception as e:
         print(f"❌ Failed to connect to FalkorDB: {e}")
         print("\n💡 Check if FalkorDB is running:")
@@ -36,7 +33,7 @@ def load_data_to_falkordb():
         return
     
     # Confirm deletion of existing graph
-    print(f"\n⚠️  Existing data in '{GRAPH_NAME}' will be deleted and reloaded.")
+    print(f"\n⚠️  Existing data in '{config.GRAPH_NAME}' will be deleted and reloaded.")
     confirm = input("Continue? (y/N): ").strip().lower()
     if confirm != 'y':
         print("Cancelled.")
@@ -44,7 +41,7 @@ def load_data_to_falkordb():
     
     # Delete graph
     try:
-        g = db.select_graph(GRAPH_NAME)
+        g = db.select_graph(config.GRAPH_NAME)
         g.delete()
         print("✅ Existing data deleted")
     except Exception as e:
@@ -53,11 +50,11 @@ def load_data_to_falkordb():
         pass
     
     # Select graph again (create)
-    g = db.select_graph(GRAPH_NAME)
+    g = db.select_graph(config.GRAPH_NAME)
     
     # 1. Load Companies
     print("\n🏢 Loading Companies...")
-    companies_path = os.path.join(CSV_DIR, 'companies.csv')
+    companies_path = os.path.join(config.CSV_DIR, 'companies.csv')
     
     try:
         with open(companies_path, 'r', encoding='utf-8') as f:
@@ -87,7 +84,7 @@ def load_data_to_falkordb():
     
     # 2. Load Technologies
     print("\n🔋 Loading Technologies...")
-    technologies_path = os.path.join(CSV_DIR, 'technologies.csv')
+    technologies_path = os.path.join(config.CSV_DIR, 'technologies.csv')
     
     try:
         with open(technologies_path, 'r', encoding='utf-8') as f:
@@ -115,7 +112,7 @@ def load_data_to_falkordb():
     
     # 3. Load Relations
     print("\n🔗 Loading Relations...")
-    relations_path = os.path.join(CSV_DIR, 'relations.csv')
+    relations_path = os.path.join(config.CSV_DIR, 'relations.csv')
     
     try:
         with open(relations_path, 'r', encoding='utf-8') as f:
@@ -149,7 +146,7 @@ def load_data_to_falkordb():
     # Complete
     print("\n" + "=" * 60)
     print("✅ Data loading complete!")
-    print(f"📊 Graph '{GRAPH_NAME}':")
+    print(f"📊 Graph '{config.GRAPH_NAME}':")
     print(f"   - Companies: {len(companies)}")
     print(f"   - Technologies: {len(technologies)}")
     print(f"   - Relations: {len(relations)}")

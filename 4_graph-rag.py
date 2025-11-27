@@ -9,20 +9,13 @@ FalkorDB Guaranteed RAG (Client-Side Search)
 import math
 import requests
 from falkordb import FalkorDB
-
-# Settings
-GRAPH_NAME = 'EnergyGraph'
-OLLAMA_URL = 'http://localhost:11434'
-EMBED_MODEL = 'nomic-embed-text:latest'
-#CHAT_MODEL = 'qwen3:8b'
-#CHAT_MODEL = 'deepseek-r1:8b'
-CHAT_MODEL = 'gpt-oss:20b'
+import config
 
 class GuaranteedAgent:
     def __init__(self):
-        print(f"🤖 Agent Running (Graph: {GRAPH_NAME})")
-        self.db = FalkorDB(host='localhost', port=6379)
-        self.graph = self.db.select_graph(GRAPH_NAME)
+        print(f"🤖 Agent Running (Graph: {config.GRAPH_NAME})")
+        self.db = FalkorDB(host=config.FALKORDB_HOST, port=config.FALKORDB_PORT)
+        self.graph = self.db.select_graph(config.GRAPH_NAME)
         
         # Cache all node data in memory (Speed optimization)
         print("📥 Loading data...", end=" ")
@@ -67,8 +60,8 @@ class GuaranteedAgent:
         
         # 1. Vectorize question
         try:
-            res = requests.post(f"{OLLAMA_URL}/api/embeddings", 
-                              json={"model": EMBED_MODEL, "prompt": question})
+            res = requests.post(f"{config.OLLAMA_URL}/api/embeddings", 
+                              json={"model": config.EMBED_MODEL, "prompt": question})
             vec = res.json()['embedding']
         except:
             print("❌ Embedding failed")
@@ -115,8 +108,8 @@ class GuaranteedAgent:
         
         print("🧠 Generating answer...")
         try:
-            final_res = requests.post(f"{OLLAMA_URL}/api/generate", 
-                                    json={"model": CHAT_MODEL, "prompt": prompt, "stream": False})
+            final_res = requests.post(f"{config.OLLAMA_URL}/api/generate", 
+                                    json={"model": config.CHAT_MODEL, "prompt": prompt, "stream": False})
             print("\n" + "="*60)
             print(f"🤖 AI Answer:\n{final_res.json()['response']}")
             print("="*60)
@@ -128,7 +121,7 @@ if __name__ == "__main__":
     
     # Question Test
     #agent.ask("Which battery companies collaborate with Ford?")
-    #agent.ask("Who develops Sodium-Ion batteries?")
+    agent.ask("Who develops Sodium-Ion batteries?")
     #agent.ask("Which companies develop LFP batteries?")
     #agent.ask("What kind of company is CATL?")
-    agent.ask("Which car companies are collaborating with CATL?")
+    #agent.ask("Which car companies are collaborating with CATL?")

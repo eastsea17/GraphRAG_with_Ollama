@@ -10,22 +10,20 @@ FalkorDB Graph Data Enrichment Script (Fixed)
 # ========================================
 # 🤖 LLM Model Settings
 # ========================================
-#LLM_MODEL = 'qwen2.5:14b'
-#LLM_MODEL = 'qwen3:8b'
-LLM_MODEL = 'deepseek-r1:8b'
 
 import argparse
 import time
 import requests
 from typing import List, Dict
 from falkordb import FalkorDB
+import config
 
 class GraphEnricher:
-    def __init__(self, graph_name: str = 'EnergyGraph', ollama_url: str = 'http://localhost:11434'):
-        self.db = FalkorDB(host='localhost', port=6379)
+    def __init__(self, graph_name: str = config.GRAPH_NAME, ollama_url: str = config.OLLAMA_URL):
+        self.db = FalkorDB(host=config.FALKORDB_HOST, port=config.FALKORDB_PORT)
         self.graph = self.db.select_graph(graph_name)
         self.ollama_url = ollama_url
-        self.model = LLM_MODEL
+        self.model = config.LLM_MODEL
         self.processed_count = 0
         
         # Check Ollama connection
@@ -153,11 +151,11 @@ Answer in plain text without markdown formatting. Keep it under 100 words."""
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--graph', default='EnergyGraph')
+    parser.add_argument('--graph', default=config.GRAPH_NAME)
     parser.add_argument('--sample', type=int)
     parser.add_argument('--full', action='store_true')
     parser.add_argument('--force', action='store_true', help='Force overwrite existing descriptions')
-    parser.add_argument('--ollama-url', default='http://localhost:11434')
+    parser.add_argument('--ollama-url', default=config.OLLAMA_URL)
     args = parser.parse_args()
     
     if not args.sample and not args.full:

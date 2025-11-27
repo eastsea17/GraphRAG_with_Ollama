@@ -1,12 +1,13 @@
 from falkordb import FalkorDB
+import config
 
 def analyze_network():
     # 1. Connect to DB
-    db = FalkorDB(host='localhost', port=6379)
+    db = FalkorDB(host=config.FALKORDB_HOST, port=config.FALKORDB_PORT)
     
     # Select Graph (Change to your graph name)
     # e.g., 'EnergyGraph' or 'EnergyGraph_10000'
-    g = db.select_graph('EnergyGraph') 
+    g = db.select_graph(config.GRAPH_NAME) 
 
     print("=== 1. Degree Centrality TOP 5 ===")
     print("Finding technologies with the most developing companies.")

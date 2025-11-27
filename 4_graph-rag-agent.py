@@ -10,25 +10,16 @@ import math
 import sys
 import requests
 from falkordb import FalkorDB
-
-# ==========================================
-# ⚙️ Settings
-# ==========================================
-GRAPH_NAME = 'EnergyGraph'
-OLLAMA_URL = 'http://localhost:11434'
-EMBED_MODEL = 'nomic-embed-text:latest'
-# If you have the recommended high-performance model (qwen2.5:14b), you can switch to it.
-CHAT_MODEL = 'deepseek-r1:8b'
-#CHAT_MODEL = 'gpt-oss:20b'
+import config
 
 class GraphRAGAgent:
     def __init__(self):
         print("=" * 60)
-        print(f"🤖 Initializing Energy Solution Agent... (Graph: {GRAPH_NAME})")
+        print(f"🤖 Initializing Energy Solution Agent... (Graph: {config.GRAPH_NAME})")
         
         try:
-            self.db = FalkorDB(host='localhost', port=6379)
-            self.graph = self.db.select_graph(GRAPH_NAME)
+            self.db = FalkorDB(host=config.FALKORDB_HOST, port=config.FALKORDB_PORT)
+            self.graph = self.db.select_graph(config.GRAPH_NAME)
         except Exception as e:
             print(f"❌ DB Connection Failed: {e}")
             sys.exit(1)
@@ -79,8 +70,8 @@ class GraphRAGAgent:
     def ask(self, question):
         # 1. Vectorize question
         try:
-            res = requests.post(f"{OLLAMA_URL}/api/embeddings", 
-                              json={"model": EMBED_MODEL, "prompt": question})
+            res = requests.post(f"{config.OLLAMA_URL}/api/embeddings", 
+                              json={"model": config.EMBED_MODEL, "prompt": question})
             vec = res.json()['embedding']
         except Exception as e:
             print(f"❌ Embedding generation failed: {e}")
@@ -129,8 +120,8 @@ class GraphRAGAgent:
         
         print("🧠 Generating answer...           ", end="\r")
         try:
-            final_res = requests.post(f"{OLLAMA_URL}/api/generate", 
-                                    json={"model": CHAT_MODEL, "prompt": prompt, "stream": False})
+            final_res = requests.post(f"{config.OLLAMA_URL}/api/generate", 
+                                    json={"model": config.CHAT_MODEL, "prompt": prompt, "stream": False})
             
             print(" " * 30, end="\r") # Clear status message
             print("\n" + "="*60)
