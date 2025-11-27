@@ -1,0 +1,82 @@
+START_ID,END_ID,TYPE
+LG Energy Solution,NCM Battery,DEVELOPS
+LG Energy Solution,NCMA Battery,DEVELOPS
+LG Energy Solution,Silicon Anode,DEVELOPS
+LG Energy Solution,High-Nickel Cathode,DEVELOPS
+LG Energy Solution,Pouch Cell,DEVELOPS
+LG Energy Solution,4680 Cylindrical Cell,DEVELOPS
+LG Energy Solution,General Motors,COLLABORATES
+LG Energy Solution,Hyundai Motor,SUPPLIES
+LG Energy Solution,Tesla,SUPPLIES
+LG Energy Solution,Honda,COLLABORATES
+SK On,NCM Battery,DEVELOPS
+SK On,High-Nickel Cathode,DEVELOPS
+SK On,Pouch Cell,DEVELOPS
+SK On,Ford,COLLABORATES
+SK On,Hyundai Motor,SUPPLIES
+Samsung SDI,NCA Battery,DEVELOPS
+Samsung SDI,Prismatic Cell,DEVELOPS
+Samsung SDI,Sulfide-based Solid State,DEVELOPS
+Samsung SDI,BMW,SUPPLIES
+Samsung SDI,Stellantis,COLLABORATES
+Tesla,LFP Battery,USES
+Tesla,NCA Battery,USES
+Tesla,4680 Cylindrical Cell,DEVELOPS
+Tesla,Dry Coating Process,DEVELOPS
+Tesla,BMS (Battery Management System),DEVELOPS
+Tesla,CTC (Cell to Chassis),DEVELOPS
+Tesla,Autonomous Driving,DEVELOPS
+Tesla,Panasonic,COLLABORATES
+CATL,LFP Battery,DEVELOPS
+CATL,NCM Battery,DEVELOPS
+CATL,Sodium-Ion Battery,DEVELOPS
+CATL,Qilin Battery,DEVELOPS
+CATL,CTP (Cell to Pack),DEVELOPS
+CATL,Tesla,SUPPLIES
+CATL,Volkswagen,SUPPLIES
+CATL,BMW,SUPPLIES
+BYD,LFP Battery,DEVELOPS
+BYD,Blade Battery,DEVELOPS
+BYD,CTP (Cell to Pack),DEVELOPS
+BYD,Vertical Integration,STRATEGY
+Panasonic,NCA Battery,DEVELOPS
+Panasonic,4680 Cylindrical Cell,DEVELOPS
+Panasonic,Tesla,COLLABORATES
+Northvolt,NCM Battery,DEVELOPS
+Northvolt,Prismatic Cell,DEVELOPS
+Northvolt,Battery Recycling,DEVELOPS
+Northvolt,Volkswagen,COLLABORATES
+Northvolt,BMW,COLLABORATES
+QuantumScape,Oxide-based Solid State,DEVELOPS
+QuantumScape,Lithium Metal Anode,DEVELOPS
+Volkswagen,QuantumScape,INVESTS_IN
+Volkswagen,Northvolt,INVESTS_IN
+Volkswagen,Unified Cell,DEVELOPS
+Volkswagen,Guoxuan High-Tech,INVESTS_IN
+Ford,Solid Power,INVESTS_IN
+Ford,SK On,COLLABORATES
+BMW,Solid Power,INVESTS_IN
+General Motors,Ultium Platform,DEVELOPS
+General Motors,LG Energy Solution,COLLABORATES
+General Motors,SolidEnergy Systems,INVESTS_IN
+Toyota,Sulfide-based Solid State,DEVELOPS
+Toyota,Hybrid Technology,DEVELOPS
+Toyota,Panasonic,COLLABORATES
+Posco Future M,High-Nickel Cathode,DEVELOPS
+Posco Future M,Silicon Anode,DEVELOPS
+Posco Future M,LG Energy Solution,SUPPLIES
+Posco Future M,Samsung SDI,SUPPLIES
+EcoPro BM,High-Nickel Cathode,DEVELOPS
+EcoPro BM,NCA Battery,DEVELOPS
+EcoPro BM,Samsung SDI,SUPPLIES
+EcoPro BM,SK On,SUPPLIES
+Redwood Materials,Battery Recycling,DEVELOPS
+Redwood Materials,Hydrometallurgy,DEVELOPS
+Redwood Materials,Panasonic,SUPPLIES
+Rivian,Samsung SDI,COLLABORATES
+Rivian,High-Nickel Cathode,USES
+StoreDot,Silicon Anode,DEVELOPS
+StoreDot,Fast Charging,DEVELOPS
+EVE Energy,4680 Cylindrical Cell,DEVELOPS
+EVE Energy,BMW,SUPPLIES
+Solid Power,Sulfide-based Solid State,DEVELOPS

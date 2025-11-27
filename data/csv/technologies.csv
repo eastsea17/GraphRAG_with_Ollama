@@ -1,0 +1,56 @@
+name,category
+NCM Battery,Chemistry
+LFP Battery,Chemistry
+NCA Battery,Chemistry
+LMFP Battery,Chemistry
+High-Nickel Cathode,Material
+Silicon Anode,Material
+Lithium Metal Anode,Material
+Sulfide-based Solid State,NextGen
+Oxide-based Solid State,NextGen
+Polymer-based Solid State,NextGen
+Dry Coating Process,Process
+4680 Cylindrical Cell,Form Factor
+Prismatic Cell,Form Factor
+Pouch Cell,Form Factor
+Blade Battery,Form Factor
+CTP (Cell to Pack),Packaging
+CTC (Cell to Chassis),Packaging
+BMS (Battery Management System),Software
+Thermal Management System,Hardware
+Wireless BMS,Software
+Sodium-Ion Battery,NextGen
+Lithium-Sulfur Battery,NextGen
+Battery Recycling,Service
+Hydrometallurgy,Process
+Direct Recycling,Process
+NCMA Battery,Chemistry
+Ultium Platform,Platform
+Kirin Battery,Platform
+Unified Cell,Form Factor
+Solid Electrolyte,Material
+Graphite Anode,Material
+CNT Conductive Agent,Material
+Binder,Material
+Separator,Material
+Foil,Material
+Module,Hardware
+Pack,Hardware
+Over-the-Air (OTA),Software
+Autonomous Driving,Software
+Charging Station,Infrastructure
+V2G (Vehicle to Grid),Service
+ESS (Energy Storage System),Product
+Carbon Footprint Tracking,Service
+Digital Twin,Software
+Smart Factory,Process
+AI-based Material Discovery,Software
+Swap Station,Service
+Bi-polar Stack,Process
+Semi-Solid Battery,NextGen
+Manganese-rich Cathode,Material
+Cobalt-free Battery,Chemistry
+Fast Charging,Feature
+Long Cycle Life,Feature
+Cold Weather Performance,Feature
+Safety,Feature
