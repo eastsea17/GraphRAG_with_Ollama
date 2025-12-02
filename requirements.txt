@@ -1,0 +1,8 @@
+pandas
+requests
+falkordb
+numpy
+scikit-learn
+openpyxl
+python-docx
+PyPDF2

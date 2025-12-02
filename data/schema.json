@@ -1,0 +1,19 @@
+{
+  "nodes": [
+    {
+      "type": "Keyword",
+      "attributes": [
+        "Id",
+        "Label",
+        "Type"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "type": "SIMILAR_TO",
+      "from_node": "Keyword",
+      "to_node": "Keyword"
+    }
+  ]
+}

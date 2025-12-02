@@ -6,7 +6,6 @@
 
 | Step | Script | Model Used | Cost |
 |-----|---------|----------|------|
-| 0️⃣ Generate Data | `0_generate_data.py` | - | Free |
 | 1️⃣ Load to DB | `1_load_to_falkordb.py` | - | Free |
 | 2️⃣ **Generate Descriptions** | `2_enrich_graph_data.py` | **deepseek-r1:8b** | **Free** ✨ |
 | 3️⃣ **Create Embeddings** | `3_create_embeddings.py` | **nomic-embed-text** | **Free** ✨ |
@@ -40,23 +39,28 @@ docker run -p 6379:6379 -p 3001:3000 -it --rm \
 ### 3. Run Full Pipeline
 
 ```bash
-# Step 0: Generate Data (Battery Industry Data)
-python 0_generate_data.py
-
-# Step 1: Load to FalkorDB
+# Step 1: Load to FalkorDB (default: EnergyGraph)
 python 1_load_to_falkordb.py
+# Or specify graph name:
+# python 1_load_to_falkordb.py --graph Paper_Keywords
 
 # Step 2: Generate Node Descriptions (Ollama LLM - Free!)
 python 2_enrich_graph_data.py
+# Or for specific graph:
+# python 2_enrich_graph_data.py --graph Paper_Keywords
 
 # Step 3: Create Vector Embeddings (Ollama Embedding - Free!)
 python 3_create_embeddings.py
+# Or for specific graph:
+# python 3_create_embeddings.py --graph Paper_Keywords
 
 # Step 4: GraphRAG Query System (Ollama - Free!)
 python 4_graph-rag.py
 
 # Step 5: Network Analysis (PageRank, Degree Centrality)
 python 5_analyze_network.py
+# Or for specific graph:
+# python 5_analyze_network.py --graph Paper_Keywords
 ```
 
 ## 💰 Cost Analysis
@@ -124,47 +128,66 @@ EMBED_MODEL = 'nomic-embed-text:latest'  # Default
 ```
 251125_FalkorDB/
 ├── data/
-│   └── csv/                       # CSV Data
-│       ├── companies.csv          # Company info (name, country)
-│       ├── technologies.csv       # Technology info (name, category)
-│       └── relations.csv          # Relationship info (START_ID, END_ID, TYPE)
+│   ├── csv/                       # CSV Data
+│   │   ├── companies.csv          # Company info (name, country)
+│   │   ├── technologies.csv       # Technology info (name, category)
+│   │   ├── keyword.csv            # Keyword nodes (from papers)
+│   │   └── relations.csv          # Relationship info (START_ID, END_ID, TYPE)
+│   ├── schema.json                # Graph schema
+│   └── embedding/                 # Embedding cache
+│
+├── Rawdata/
+│   └── rawdata.csv                # Raw scientific papers
 │
 ├── 0_FalkorDB_intro.ipynb        # FalkorDB Intro & Tutorial
 │
-├── 0_generate_data.py            # Generate Battery Industry Data
-├── 1_load_to_falkordb.py         # CSV → Load to FalkorDB
-├── 2_enrich_graph_data.py        # Generate Node Descriptions with LLM (Ollama)
-├── 3_create_embeddings.py        # Create Vector Embeddings (Ollama)
+├── 0_graph_schema_discovery.py           # Auto Graph Generation (LLM)
+├── 0_generate_research_keywords.py          # Paper Keyword Extraction (LLM)
+├── 1_load_to_falkordb.py         # CSV → Load to FalkorDB (--graph support)
+├── 2_enrich_graph_data.py        # Generate Node Descriptions with LLM (--graph support)
+├── 3_create_embeddings.py        # Create Vector Embeddings (--graph support)
 ├── 4_graph-rag.py                # GraphRAG Query System (Ollama)
-├── 5_analyze_network.py          # Network Analysis (PageRank, Centrality)
+├── 5_analyze_network.py          # Network Analysis (--graph support)
 ├── config.py                     # Centralized Configuration
 │
 ├── README.md                      # Project Overview
 ├── README_OLLAMA.md              # Ollama Guide (This Document)
+├── GRAPH_GENERATOR_README.md     # Graph Generator Guide
 └── FILE_STRUCTURE.md             # File Structure Description
 ```
 
 ## 🎬 Usage Examples
 
-### GraphRAG Query (4_graph-rag.py)
-
-```bash
-$ python 4_graph-rag.py
-
-🤖 Agent Running (Graph: EnergyGraph)
-📥 Loading data... ✅ 120 nodes loaded
-
-💬 Question: Who develops Sodium-Ion batteries?
-🔍 Analyzing...
-🧠 Generating answer...
-
-============================================================
-🤖 AI Answer:
-Sodium-Ion batteries are developed by [Searched Company Name].
-This technology is gaining attention as an alternative to Lithium-Ion batteries,
-[Related Technology Info]...
-============================================================
-```
+### GraphRAG Query (4_graph-rag-agent.py)
+ 
+ ```bash
+ $ python 4_graph-rag-agent.py
+ 
+ 🤖 Initializing Research Agent... (Graph: Paper_Keywords2)
+ 📥 Loading knowledge data (Client-side Cache)... ✅ 1495 nodes loaded
+ 
+ 💬 Question: what purposes are for patent citation analysis?
+ 🔍 Analyzing...
+ 🧠 Generating answer...
+ 
+ ============================================================
+ 🤖 Agent Answer:
+ Patent citation analysis serves several key purposes:
+ 1. **Identifying Key Players**: Finding influential companies or institutions.
+ 2. **Technology Forecasting**: Predicting future technology trends.
+ ...
+ ------------------------------------------------------------
+ 🔍 Source Context (Top 3 Nodes & Edges):
+ 
+ 1. Node: Patent Citation Analysis (Score: 0.85)
+    Edges:
+    - [HAS_PURPOSE] -> Identifying Key Players
+    - [RELATED_TO] -> Technology Forecasting
+ 
+ 2. Node: Technology Intelligence (Score: 0.78)
+ ...
+ ============================================================
+ ```
 
 ### Network Analysis (5_analyze_network.py)
 
@@ -239,28 +262,24 @@ docker run -p 6379:6379 -p 3001:3000 -it --rm \
 
 ## 🔍 Key Features Detail
 
-### 1. Data Generation (0_generate_data.py)
-- Generates company, technology, and relationship data for the battery industry
-- Configurable node counts (NUM_COMPANIES, NUM_TECHNOLOGIES, NUM_RELATIONS)
-- Combines real existing companies with synthetic data
-
-### 2. Graph Data Enrichment (2_enrich_graph_data.py)
+### 1. Graph Data Enrichment (2_enrich_graph_data.py)
 - Automatically generates descriptions for each node using Ollama LLM
 - Technology: Technical features, uses, pros/cons description
 - Company: Company info, main business, characteristics description
 
-### 3. Vector Embeddings (3_create_embeddings.py)
+### 2. Vector Embeddings (3_create_embeddings.py)
 - Converts text → vector using Ollama embedding API
 - No DB index required (Stores data only)
 - Memory-efficient processing
 
-### 4. GraphRAG (4_graph-rag.py)
+### 3. GraphRAG (4_graph-rag.py / 4_graph-rag-agent.py)
 - **Guaranteed RAG**: Removes DB index dependency
+- **Transparent Agent**: Explicitly displays **Source Context** (Top 3 Nodes & Edges)
 - Direct cosine similarity calculation within Python
 - Automatic expansion of graph relationship information
 - Accurate answer generation based on context
 
-### 5. Network Analysis (5_analyze_network.py)
+### 4. Network Analysis (5_analyze_network.py)
 - Degree Centrality: Importance based on connection count
 - PageRank: Structural influence analysis (GraphBLAS)
 

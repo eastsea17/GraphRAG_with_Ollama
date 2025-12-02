@@ -1,7 +1,8 @@
 """
 Step 4: Create Embeddings (Data Only)
 =====================================
-This script generates and stores vector embeddings for nodes (Company, Technology) in FalkorDB.
+This script generates and stores vector embeddings for all nodes in FalkorDB.
+It dynamically handles different node types and attributes.
 
 * Features:
 - Does not create DB internal indexes, avoiding 'Invalid arguments' errors.
@@ -13,15 +14,18 @@ import time
 import requests
 import json
 import os
+import argparse
 from falkordb import FalkorDB
 import config
 
 class EmbeddingCreator:
-    def __init__(self):
-        print(f"🔌 Connecting to FalkorDB... (Graph: {config.GRAPH_NAME})")
+    def __init__(self, graph_name=None):
+        if graph_name is None:
+            graph_name = config.GRAPH_NAME
+        print(f"🔌 Connecting to FalkorDB... (Graph: {graph_name})")
         try:
             self.db = FalkorDB(host=config.FALKORDB_HOST, port=config.FALKORDB_PORT)
-            self.graph = self.db.select_graph(config.GRAPH_NAME)
+            self.graph = self.db.select_graph(graph_name)
         except Exception as e:
             print(f"❌ Connection failed: {e}")
             exit()
@@ -56,10 +60,11 @@ class EmbeddingCreator:
 
     def get_nodes_without_embedding(self):
         """Retrieve nodes without embeddings"""
+        # Fetch all properties dynamically
         query = """
         MATCH (n)
         WHERE n.embedding IS NULL
-        RETURN ID(n), n.name, n.description, n.category, n.country, labels(n)
+        RETURN ID(n), labels(n), properties(n)
         """
         return self.graph.query(query).result_set
 
@@ -79,6 +84,27 @@ class EmbeddingCreator:
             print(f"  ❌ Communication Error: {e}")
             return None
 
+    def get_display_name(self, props):
+        """Get a display name from properties."""
+        # Try common name fields
+        for field in ['name', 'title', 'label', 'id', 'type']:
+            if field in props and props[field]:
+                return str(props[field])
+        # Fallback to first value
+        if props:
+            return str(list(props.values())[0])
+        return "Unknown Node"
+
+    def get_embedding_text(self, props, label):
+        """Construct text to embed from properties."""
+        # If description exists, use it
+        if 'description' in props and props['description']:
+            return props['description']
+        
+        # Otherwise, combine all properties
+        parts = [f"{k}: {v}" for k, v in props.items() if k != 'embedding' and v]
+        return f"{label} Node. {', '.join(parts)}"
+
     def run(self):
         print("\n1. Checking target nodes...")
         nodes = self.get_nodes_without_embedding()
@@ -95,22 +121,20 @@ class EmbeddingCreator:
         
         for i, row in enumerate(nodes, 1):
             node_id = row[0]
-            name = row[1]
-            desc = row[2]
-            # Use category or country info if available
-            extra = row[3] if row[3] else (row[4] if row[4] else "") 
-            label = row[5][0] if row[5] else "Unknown"
-
-            # Determine text to embed (use name + info if description is missing)
-            text_to_embed = desc if desc else f"{name} is a {label} related to {extra}"
+            labels = row[1]
+            props = row[2]
+            
+            label = labels[0] if labels else "Unknown"
+            display_name = self.get_display_name(props)
+            text_to_embed = self.get_embedding_text(props, label)
             
             # Print progress
-            print(f"  [{i}/{total}] Processing: {name[:30]}...", end="\r")
+            print(f"  [{i}/{total}] Processing: {display_name[:30]}...", end="\r")
 
             # 1. Generate embedding (Check cache first)
             if text_to_embed in self.cache:
                 vec = self.cache[text_to_embed]
-                # print(f"  [Cache Hit] {name[:20]}...", end="\r")
+                # print(f"  [Cache Hit] {display_name[:20]}...", end="\r")
             else:
                 vec = self.generate_embedding(text_to_embed)
                 if vec:
@@ -118,14 +142,10 @@ class EmbeddingCreator:
             
             if vec:
                 # 2. Update DB (Use Params for safe storage)
-                # No index created, so no errors expected
                 update_query = f"MATCH (n) WHERE ID(n) = {node_id} SET n.embedding = $vec"
                 self.graph.query(update_query, {'vec': vec})
                 success_count += 1
             
-            # Short wait to control API load
-            # time.sleep(0.01) 
-
         # Save cache at the end
         self.save_cache()
         print(f"\n💾 Cache saved to {self.cache_path}")
@@ -150,5 +170,10 @@ class EmbeddingCreator:
             print(f"   ❌ Check failed: {e}")
 
 if __name__ == "__main__":
-    creator = EmbeddingCreator()
+    parser = argparse.ArgumentParser(description='Create embeddings for FalkorDB nodes')
+    parser.add_argument('--graph', type=str, default=config.GRAPH_NAME,
+                       help=f'Graph name (default: {config.GRAPH_NAME})')
+    args = parser.parse_args()
+    
+    creator = EmbeddingCreator(graph_name=args.graph)
     creator.run()

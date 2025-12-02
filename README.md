@@ -1,94 +1,173 @@
 # FalkorDB GraphRAG System
 
-This directory contains a Battery Industry GraphRAG system using FalkorDB.
+A comprehensive GraphRAG system for knowledge graph construction and querying using FalkorDB and Local LLM.
 
 ## 📁 File Structure
 
-### Data Files
-- `companies.csv` - Battery company data (1,200 entries)
-- `technologies.csv` - Battery technology data (12,000 entries)
-- `relations.csv` - Company-Technology relationship data (20,000 entries)
+### Core Pipeline Scripts
 
-### GraphRAG System
-1. **`enrich_graph_data.py`** - Add descriptions to nodes
-   - Automatically generates descriptions for each node using LLM
-   
-2. **`create_embeddings.py`** - Create vector embeddings
-   - Converts descriptions to vectors and creates indexes
-   
-3. **`graphrag_query.py`** - GraphRAG Query System
-   - Vector Search + Graph Traversal + LLM Answer Generation
-   
-4. **`demo_graphrag.py`** - Demo Script
-   - Test the system with sample questions
+**Graph Generation (NEW - LLM-Driven)**
+0. **`0_graph_schema_discovery.py`** - Automatic graph generation from raw data
+   - Analyzes raw data using LLM
+   - Discovers Node/Edge schema automatically
+   - Extracts entities and relationships
+   - **See `GRAPH_GENERATOR_README.md` for details**
 
-### Others
-- `analyze_network.py` - Network Analysis (PageRank, etc.)
-- `FalkorDB.ipynb` - Jupyter Notebook
-- `generate_data.py` - Data Generation Script
+0. **`0_generate_research_keywords.py`** - Scientific Paper Analysis & Graph Construction
+   - **Sophisticated Graph Structure**:
+     - **Paper Nodes**: Central hubs representing each document.
+     - **Structural Edges**: `(Paper)-[:HAS_PURPOSE]->(Purpose)`, `(Paper)-[:HAS_METHOD]->(Methodology)`, etc.
+     - **Semantic Edges**: `(Purpose)-[:RELATED_TO]->(Purpose)` (Constrained to same-type nodes).
+   - Uses LLM to extract: Purpose, Background, Methodology, Results.
+   - Generates embeddings for semantic similarity.
+
+**Data Loading & Processing**
+1. **`1_load_to_falkordb.py`** - Load Data to FalkorDB
+   - Dynamically loads all CSVs in `data/csv/`.
+   - Supports `--graph` and `--clear` arguments.
+2. **`2_enrich_graph_data.py`** - Generate Node Descriptions
+   - Uses LLM to generate rich descriptions for nodes.
+3. **`3_create_embeddings.py`** - Create Vector Embeddings
+   - Generates and caches embeddings for vector search.
+
+**RAG & Analysis**
+4. **`4_graph-rag-agent.py`** - Interactive GraphRAG Agent
+   - **Transparent RAG**: Displays **Source Context** (Top 3 Nodes & Edges) used for the answer.
+   - **Hybrid Search**: Combines Vector Search + Graph Traversal (1-hop).
+   - **Interactive CLI**: Chat interface with the knowledge graph.
+5. **`5_analyze_network.py`** - Network Analysis
+   - Calculates Degree Centrality, Influence Score, etc.
+
+### Utility Scripts
+- **`enrich_export.py`** - Export enriched data
 
 ## 🚀 Quick Start Guide
 
-### 1. Environment Setup
-
+### Prerequisites
+### 0. Environment Setup
 ```bash
-# Install required packages
-pip install falkordb
+# Install dependencies
+pip install -r requirements.txt
 
-# Install Ollama (if not already installed)
-# Visit https://ollama.com/download
+# Install Ollama and pull models
+ollama pull deepseek-r1:8b
+ollama pull nomic-embed-text
 ```
 
-### 2. Run FalkorDB
+### 1. Generate Graph Data
+```bash
+# Option A: General Data (Schema Discovery)
+python 0_graph_schema_discovery.py
+
+# Option B: Scientific Papers (Research Keywords)
+python 0_generate_research_keywords.py
+```
+
+### 2. Load to Database
+```bash
+# Load data into FalkorDB (clearing previous data)
+python 1_load_to_falkordb.py --clear --graph Paper_Keywords2
+```
+
+### 3. Enrich & Embed
+```bash
+# Generate descriptions (Optional but recommended)
+python 2_enrich_graph_data.py --graph Paper_Keywords2
+
+# Create embeddings (Required for RAG)
+python 3_create_embeddings.py --graph Paper_Keywords2
+```
+
+### 4. Run RAG Agent
+```bash
+python 4_graph-rag-agent.py
+```
+
+### 5. Analyze Network
+```bash
+python 5_analyze_network.py --graph Paper_Keywords2
+``` → Query & Answer
+
+### Step 0: Generate Graph from Raw Data (NEW)
+
+**For any domain - automatically discovers schema!**
+
+```bash
+# Generate Node/Edge CSVs from raw data
+python 0_graph_schema_discovery.py
+
+# Or specify a file
+python 0_graph_schema_discovery.py --file Rawdata/mycustom_data.csv
+
+# Quick test with limited rows
+# Edit config.py: MAX_ROWS_FOR_EXTRACTION = 20
+python 0_graph_schema_discovery.py
+```
+
+**See `GRAPH_GENERATOR_README.md` for detailed documentation.**
+
+### Step 1: Run FalkorDB
 
 ```bash
 # Run FalkorDB with Docker
-docker run -p 6379:6379 -p 3001:3000 -it --rm -v ./data:/var/lib/falkordb/data falkordb/falkordb
+docker run -p 6379:6379 -p 3001:3000 -it --rm falkordb/falkordb
 ```
 
-### 3. Load Data (Skip if already done)
+### Step 2: Load Data into FalkorDB
 
 ```bash
-# Run bulk insert in terminal
-falkordb-bulk-insert EnergyGraph \
-  --nodes-with-label Company companies.csv \
-  --nodes-with-label Technology technologies.csv \
-  --relations-with-type DEVELOPS relations.csv
+# Load generated CSV files into FalkorDB (default graph: EnergyGraph)
+python 1_load_to_falkordb.py
+
+# Or specify a custom graph name
+python 1_load_to_falkordb.py --graph Paper_Keywords
+
+# Clear existing graph before loading
+python 1_load_to_falkordb.py --graph Paper_Keywords --clear
 ```
 
-### 4. Build GraphRAG System
+### Step 3: Enrich Graph with Descriptions
 
-**Step 1: Add Descriptions to Nodes** (Test)
-```bash
-# Process only 10 samples
-python enrich_graph_data.py --sample 10
-```
-
-If everything looks good, process all:
-```bash
-# Process all nodes (Takes time, incurs API costs)
-python enrich_graph_data.py --full
-```
-
-**Step 2: Create Vector Embeddings** (Test)
+**Test first:**
 ```bash
 # Process only 10 samples
-python create_embeddings.py --sample 10
+python 2_enrich_graph_data.py --sample 10
 ```
 
-Process all:
+**Process all:**
 ```bash
-# Create embeddings for all nodes
-python create_embeddings.py --full
+# Process all nodes (takes time)
+python 2_enrich_graph_data.py --full
 ```
 
-**Step 3: Test GraphRAG**
-```bash
-# Run demo
-python demo_graphrag.py
+### Step 4: Create Vector Embeddings
 
-# Or interactive mode
-python graphrag_query.py
+```bash
+# Create embeddings for default graph (EnergyGraph)
+python 3_create_embeddings.py
+
+# Create embeddings for specific graph
+python 3_create_embeddings.py --graph Paper_Keywords
+```
+
+### Step 5: Query with GraphRAG
+
+```bash
+# Interactive mode
+python 4_graph_rag.py
+
+# Direct query
+python 4_graph_rag.py --query "What are knowledge graphs?"
+```
+
+### Step 6: Analyze Network
+
+```bash
+# Analyze default graph (EnergyGraph)
+python 5_analyze_network.py
+
+# Analyze specific graph
+python 5_analyze_network.py --graph Paper_Keywords
 ```
 
 ## 💡 Usage Examples
@@ -129,52 +208,77 @@ Tesla develops LFP Battery and BMS technologies...
 
 ## 🔍 System Architecture
 
+### Complete Pipeline
+
+```
+📄 Raw Data (CSV/Excel/Word/PDF)
+    ↓
+🤖 0. LLM-Driven Graph Generation
+    - Analyze content domain & topics
+    - Discover Node/Edge schema
+    - Extract entities & relationships
+    ↓
+📊 CSV Files (Nodes + Edges)
+    ↓
+⬆️ 1. Load to FalkorDB
+    ↓
+💬 2. LLM Enrichment (Add descriptions)
+    ↓
+🔢 3. Create Vector Embeddings
+    ↓
+❓ 4. GraphRAG Query Engine
+```
+
+### Query Flow
+
 ```
 User Question
     ↓
 1. Query Embedding (Ollama)
     ↓
 2. Vector Search (FalkorDB)
-   - Search Technology nodes
-   - Search Company nodes
+   - Search relevant nodes using embeddings
     ↓
 3. Graph Traversal (Cypher)
-   - Technology → DEVELOPS ← Company
    - Traverse relationship network
+   - Gather connected information
     ↓
 4. Context Assembly
-   - Collect searched node info
-   - Add graph relationship info
+   - Collect node information
+   - Add relationship context
     ↓
-5. LLM Answer Generation (Ollama - DeepSeek/Llama3)
+5. LLM Answer Generation (Ollama)
     ↓
 Final Answer
 ```
 
-## ⚙️ Configuration Options
+## ⚙️ Configuration
 
-### enrich_graph_data.py
-- `--graph`: Graph name (Default: EnergyGraph)
-- `--sample N`: Sample mode (Process only N items per type)
-- `--full`: Process all nodes
-- `--ollama-url`: Ollama URL (Default: http://localhost:11434)
+All settings are centralized in `config.py`:
 
-### create_embeddings.py
-Supports same options
-
-### graphrag_query.py
 ```python
-rag = GraphRAG(
-    graph_name='EnergyGraph',  # Graph name
-    ollama_url='http://localhost:11434' # Ollama URL
-)
+# Model Settings
+GRAPH_GENERATION_MODEL = 'gpt-oss:20b'  # For graph generation
+LLM_MODEL = 'deepseek-r1:8b'            # For enrichment
+EMBED_MODEL = 'nomic-embed-text:latest' # For embeddings
 
-answer = rag.query(
-    question,
-    top_k=3,        # Number of top nodes to search
-    verbose=False   # Whether to print detailed logs
-)
+# Performance Settings
+BATCH_SIZE = 10
+MAX_NODE_TYPES = 3
+MAX_EDGE_TYPES = 3
+MAX_ROWS_FOR_EXTRACTION = None  # None = all rows
+MAX_TEXT_LENGTH = 200  # Truncate long text
 ```
+
+**For detailed configuration options, see:**
+- `GRAPH_GENERATOR_README.md` - Graph generation settings
+- `README_OLLAMA.md` - Ollama configuration
+
+## 📚 Documentation
+
+- **`GRAPH_GENERATOR_README.md`** - Complete guide for `0_generate_graph.py`
+- **`README_OLLAMA.md`** - Ollama setup and local LLM usage
+- **`FILE_STRUCTURE.md`** - Detailed file structure explanation
 
 ## 📊 Check Data
 

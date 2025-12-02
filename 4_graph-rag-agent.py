@@ -15,7 +15,7 @@ import config
 class GraphRAGAgent:
     def __init__(self):
         print("=" * 60)
-        print(f"🤖 Initializing Energy Solution Agent... (Graph: {config.GRAPH_NAME})")
+        print(f"🤖 Initializing Research Agent... (Graph: {config.GRAPH_NAME})")
         
         try:
             self.db = FalkorDB(host=config.FALKORDB_HOST, port=config.FALKORDB_PORT)
@@ -27,10 +27,11 @@ class GraphRAGAgent:
         # Cache all node data in memory (Client-Side Search)
         print("📥 Loading knowledge data (Client-side Cache)...", end=" ")
         try:
+            # Modified query to fetch id and Label as fallbacks for name
             query = """
             MATCH (n) 
             WHERE n.embedding IS NOT NULL 
-            RETURN ID(n), n.name, n.embedding, n.description, labels(n)
+            RETURN ID(n), coalesce(n.name, n.Label, n.id) as name, n.embedding, n.description, labels(n)
             """
             self.cache = self.graph.query(query).result_set
             print(f"✅ {len(self.cache)} nodes loaded")
@@ -92,7 +93,8 @@ class GraphRAGAgent:
             context += f" - Description: {item['desc']}\n"
             
             # Query relationships in DB
-            rel_q = f"MATCH (n)-[r]-(m) WHERE ID(n)={item['id']} RETURN type(r), m.name"
+            # Updated to use coalesce for target node name as well
+            rel_q = f"MATCH (n)-[r]-(m) WHERE ID(n)={item['id']} RETURN type(r), coalesce(m.name, m.Label, m.id) as target_name"
             rel_res = self.graph.query(rel_q)
             
             if rel_res.result_set:
@@ -103,12 +105,12 @@ class GraphRAGAgent:
 
         # 4. LLM Answer
         prompt = f"""
-        You are an 'Energy Solution Strategist' AI.
+        You are an 'Technological Knowledge' AI.
         Answer the user's question in English based on the provided [Context].
         
         Rules:
         1. Based on the 'Network Relationships' in the Context, clearly state who collaborates with whom and who develops what.
-        2. Do not fabricate information not present in the Context.
+        2. Do not fabricate information not present in the Context. If there isn't any, say there isn't any.
         
         [Context]
         {context}
@@ -126,6 +128,23 @@ class GraphRAGAgent:
             print(" " * 30, end="\r") # Clear status message
             print("\n" + "="*60)
             print(f"🤖 Agent Answer:\n{final_res.json()['response'].strip()}")
+            print("-" * 60)
+            print("🔍 Source Context (Top 3 Nodes & Edges):")
+            
+            for i, item in enumerate(top_nodes[:3]):
+                print(f"\n{i+1}. Node: {item['name']} (Score: {item['score']:.2f})")
+                
+                # Fetch edges again for display (or we could have stored them)
+                # Updated to use coalesce for target node name
+                rel_q = f"MATCH (n)-[r]-(m) WHERE ID(n)={item['id']} RETURN type(r), coalesce(m.name, m.Label, m.id) as target_name LIMIT 5"
+                rel_res = self.graph.query(rel_q)
+                
+                if rel_res.result_set:
+                    print("   Edges:")
+                    for r in rel_res.result_set:
+                        print(f"   - [{r[0]}] -> {r[1]}")
+                else:
+                    print("   (No direct edges found)")
             print("="*60)
         except Exception as e:
             print(f"❌ LLM communication failed: {e}")

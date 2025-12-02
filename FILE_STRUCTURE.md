@@ -7,94 +7,86 @@ This project is a **100% Ollama-based GraphRAG system** that builds a battery in
 ## 🗂️ Directory Structure
 
 ```
-251125_FalkorDB/
+251201_Building_GraphRAG/
 ├── data/
-│   └── csv/                          # CSV data files
-│       ├── companies.csv             # Company info (name, country)
-│       ├── technologies.csv          # Technology info (name, category)
-│       └── relations.csv             # Relationship info (START_ID, END_ID, TYPE)
+│   ├── csv/                       # CSV Data
+│   │   ├── papers.csv             # Paper Hub Nodes
+│   │   ├── research_purpose.csv   # Extracted Purpose Nodes
+│   │   ├── research_background.csv # Extracted Background Nodes
+│   │   ├── research_methodology.csv # Extracted Methodology Nodes
+│   │   ├── research_resultsandeffects.csv # Extracted Results Nodes
+│   │   └── relations.csv          # Edges (Structural + Semantic)
+│   ├── schema.json                # Graph schema (for auto-generation)
+│   └── embedding/                 # Embedding cache
 │
-├── 0_FalkorDB_intro.ipynb           # FalkorDB Introduction & Tutorial
+├── Rawdata/
+│   └── rawdata.csv                # Raw scientific papers
 │
-├── 0_generate_data.py               # Step 0: Generate Data
-├── 1_load_to_falkordb.py            # Step 1: Load to DB
-├── 2_enrich_graph_data.py           # Step 2: Generate Descriptions (Ollama LLM)
-├── 3_create_embeddings.py           # Step 3: Create Embeddings (Ollama)
-├── 4_graph-rag.py                   # Step 4: GraphRAG Query System
-├── 5_analyze_network.py             # Step 5: Network Analysis
-├── config.py                        # Centralized Configuration
 │
-├── README.md                         # Project Overview
-├── README_OLLAMA.md                 # Ollama Setup Guide
-├── FILE_STRUCTURE.md                # File Structure Description (This document)
+├── 0_graph_schema_discovery.py              # Step 0a: Auto Graph Generation (LLM)
+├── 0_generate_research_keywords.py             # Step 0b: Paper Keyword Extraction (LLM)
+├── 1_load_to_falkordb.py            # Step 1: Load to DB (--graph support)
+├── 2_enrich_graph_data.py           # Step 2: Generate Descriptions (--graph support)
+├── 3_create_embeddings.py           # Step 3: Create Embeddings (--graph support)
+├── 4_graph-rag.py                   # Step 4a: Basic GraphRAG Query
+├── 4_graph-rag-agent.py             # Step 4b: Interactive RAG Agent
+├── 5_analyze_network.py             # Step 5: Network Analysis (--graph support)
+├── config.py                        # Configuration
+├── enrich_export.py                 # Export Utility
+├── requirements.txt                 # Python Dependencies
 │
-└── __pycache__/                      # Python cache files
+├── README.md                        # Project Overview
+├── README_OLLAMA.md                 # Ollama Guide
+├── GRAPH_GENERATOR_README.md        # Graph Generator Guide
+└── FILE_STRUCTURE.md                # This File
 ```
 
 ---
 
 ## 📝 Detailed File Descriptions
 
-### 📓 Jupyter Notebook
-
-#### `0_FalkorDB_intro.ipynb`
-- **Purpose**: FalkorDB introduction and basic usage tutorial
-- **Content**: 
-  - FalkorDB installation and setup
-  - Basic Cypher query examples
-  - Introduction to graph data modeling
-
----
-
 ### 🐍 Python Scripts (By Execution Order)
 
-#### `0_generate_data.py` - Generate Data
-**Function**: Generates synthetic data related to the battery industry
+#### `0_graph_schema_discovery.py` - Auto Graph Generation (LLM)
+**Function**: Automatically generates graph from any raw data using LLM
 
-**Generated Data**:
-- **Companies**: Company info (name, country)
-  - Real companies: LG Energy Solution, Tesla, CATL, etc.
-  - Synthetic companies: Automatically generated company names
-- **Technologies**: Technology info (name, category)
-  - NCM Battery, LFP Battery, Solid-State Battery, etc.
-- **Relations**: Company-Technology relationships (DEVELOPS)
-
-**Configurable Settings**:
-```python
-NUM_COMPANIES = 20      # Number of companies to generate
-NUM_TECHNOLOGIES = 100  # Number of technologies to generate
-NUM_RELATIONS = 300     # Number of relations to generate
-```
-
-**Execution**:
-```bash
-python 0_generate_data.py
-```
-
-**Output**: Creates 3 CSV files in `data/csv/` directory
+**See**: `GRAPH_GENERATOR_README.md` for detailed documentation
 
 ---
 
-#### `1_load_to_falkordb.py` - Load to DB
-**Function**: Loads CSV data into FalkorDB graph database
+#### `0_generate_research_keywords.py` - Scientific Paper Analysis
+**Function**: Extracts structured keywords from scientific papers and builds a sophisticated knowledge graph.
 
-**Key Operations**:
-1. Connect to FalkorDB (localhost:6379)
-2. Delete existing graph (User confirmation required)
-3. Create Company nodes
-4. Create Technology nodes
-5. Create DEVELOPS relationships
+**Key Features**:
+- **Paper Hubs**: Creates a `Paper` node for each document.
+- **Structural Edges**: Connects Paper to its keywords (`HAS_PURPOSE`, `HAS_METHOD`, etc.).
+- **Semantic Edges**: Connects keywords of the **same type** if they are semantically similar.
+- **LLM Extraction**: Extracts Purpose, Background, Methodology, Results.
 
-**Graph Used**: `EnergyGraph`
+**Output**:
+- `papers.csv`
+- `research_purpose.csv`, `research_background.csv`, etc.
+- `relations.csv`
 
 **Execution**:
 ```bash
-python 1_load_to_falkordb.py
+python 0_generate_research_keywords.py
 ```
 
-**Notes**: 
-- FalkorDB must be running
-- Be careful as existing data will be deleted
+---
+
+#### `1_load_to_falkordb.py` - Load Data to FalkorDB
+**Function**: Dynamically loads ALL CSV files found in `data/csv/` into FalkorDB.
+
+**Key Features**:
+- **Dynamic Loading**: Automatically detects node files.
+- **Graph Support**: Specify target graph with `--graph`.
+- **Clear Option**: Clear existing graph with `--clear`.
+
+**Execution**:
+```bash
+python 1_load_to_falkordb.py --clear --graph Paper_Keywords2
+```
 
 ---
 
@@ -112,7 +104,17 @@ python 1_load_to_falkordb.py
 
 **Execution**:
 ```bash
+# Enrich default graph
 python 2_enrich_graph_data.py
+
+# Enrich specific graph
+python 2_enrich_graph_data.py --graph Paper_Keywords
+
+# Sample mode (10 nodes)
+python 2_enrich_graph_data.py --sample 10
+
+# Full mode
+python 2_enrich_graph_data.py --full
 ```
 
 **Configuration**:
@@ -132,15 +134,20 @@ LLM_MODEL = 'deepseek-r1:8b'
 1. Retrieve nodes without embeddings
 2. Convert text → vector using Ollama API
 3. Save vector as node property `embedding`
-4. No DB index created (Data storage only)
+4. Persistent caching in `data/embedding/embeddings_cache.json`
 
 **Features**:
 - Data preparation for client-side search
 - Prevents 'Invalid arguments' errors
+- Caches embeddings for reuse
 
 **Execution**:
 ```bash
+# Create embeddings for default graph
 python 3_create_embeddings.py
+
+# Create embeddings for specific graph
+python 3_create_embeddings.py --graph Paper_Keywords
 ```
 
 ---
@@ -180,27 +187,40 @@ python 4_graph-rag.py
 
 **Analysis Algorithms**:
 1. **Degree Centrality**: Popularity based on connection count
-   - Discover technologies developed by the most companies
-2. **PageRank**: Structural influence analysis
-   - Uses FalkorDB GraphBLAS engine
+   - Discover nodes with the most connections
+2. **Influence Score**: Structural influence analysis
+   - Based on incoming edge count
+3. **Clustering Coefficient**: Local clustering analysis
+   - Measures triangle density around nodes
 
 **Execution**:
 ```bash
+# Analyze default graph
 python 5_analyze_network.py
+
+# Analyze specific graph
+python 5_analyze_network.py --graph Paper_Keywords
 ```
 
 **Output Example**:
 ```
-=== 1. Degree Centrality TOP 5 ===
-Rank 1: NCM Battery (8 developers)
-Rank 2: LFP Battery (6 developers)
+=== Graph Statistics ===
+Total Nodes: 1315
+Total Edges: 101967
+
+=== 1. Degree Centrality TOP 10 ===
+Rank 1: [Keyword] technology classification (Degree: 735)
 ...
 
-=== 2. PageRank (Structural Influence) TOP 5 ===
-Rank 1: NCM Battery (Score: 0.125432)
-Rank 2: LFP Battery (Score: 0.098765)
+=== 2. PageRank (Structural Influence) TOP 10 ===
+Rank 1: [Keyword] patent data analysis... (Influence: 446)
 ...
 ```
+
+**Features**:
+- Works with any graph schema
+- Generic node/edge queries
+- Multiple centrality metrics
 
 ---
 
