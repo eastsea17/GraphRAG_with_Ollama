@@ -7,6 +7,7 @@ A comprehensive GraphRAG system for knowledge graph construction and querying us
 ### Core Pipeline Scripts
 
 **Graph Generation (NEW - LLM-Driven)**
+
 0. **`0_graph_schema_discovery.py`** - Automatic graph generation from raw data
    - Analyzes raw data using LLM
    - Discovers Node/Edge schema automatically
@@ -169,6 +170,7 @@ python 5_analyze_network.py
 # Analyze specific graph
 python 5_analyze_network.py --graph Paper_Keywords
 ```
+<img width="2964" height="1618" alt="image" src="https://github.com/user-attachments/assets/5360aeb0-fa91-4064-a3ed-4aa1267578cd" />
 
 ## 💡 Usage Examples
 
