@@ -7,12 +7,12 @@ A comprehensive GraphRAG system for knowledge graph construction and querying us
 ### Core Pipeline Scripts
 
 **Graph Generation (NEW - LLM-Driven)**
-
 0. **`0_graph_schema_discovery.py`** - Automatic graph generation from raw data
-   - Analyzes raw data using LLM
-   - Discovers Node/Edge schema automatically
-   - Extracts entities and relationships
-   - **See `GRAPH_GENERATOR_README.md` for details**
+
+- Analyzes raw data using LLM
+- Discovers Node/Edge schema automatically
+- Extracts entities and relationships
+- **See `GRAPH_GENERATOR_README.md` for details**
 
 0. **`0_generate_research_keywords.py`** - Scientific Paper Analysis & Graph Construction
    - **Sophisticated Graph Structure**:
@@ -23,6 +23,7 @@ A comprehensive GraphRAG system for knowledge graph construction and querying us
    - Generates embeddings for semantic similarity.
 
 **Data Loading & Processing**
+
 1. **`1_load_to_falkordb.py`** - Load Data to FalkorDB
    - Dynamically loads all CSVs in `data/csv/`.
    - Supports `--graph` and `--clear` arguments.
@@ -33,19 +34,24 @@ A comprehensive GraphRAG system for knowledge graph construction and querying us
 
 **RAG & Analysis**
 4. **`4_graph-rag-agent.py`** - Interactive GraphRAG Agent
-   - **Transparent RAG**: Displays **Source Context** (Top 3 Nodes & Edges) used for the answer.
-   - **Hybrid Search**: Combines Vector Search + Graph Traversal (1-hop).
-   - **Interactive CLI**: Chat interface with the knowledge graph.
+
+- **Transparent RAG**: Displays **Source Context** (Top 3 Nodes & Edges) used for the answer.
+- **Hybrid Search**: Combines Vector Search + Graph Traversal (1-hop).
+- **Interactive CLI**: Chat interface with the knowledge graph.
+
 5. **`5_analyze_network.py`** - Network Analysis
    - Calculates Degree Centrality, Influence Score, etc.
 
 ### Utility Scripts
+
 - **`enrich_export.py`** - Export enriched data
 
 ## 🚀 Quick Start Guide
 
 ### Prerequisites
+
 ### 0. Environment Setup
+
 ```bash
 # Install dependencies
 pip install -r requirements.txt
@@ -56,6 +62,7 @@ ollama pull nomic-embed-text
 ```
 
 ### 1. Generate Graph Data
+
 ```bash
 # Option A: General Data (Schema Discovery)
 python 0_graph_schema_discovery.py
@@ -65,26 +72,30 @@ python 0_generate_research_keywords.py
 ```
 
 ### 2. Load to Database
+
 ```bash
 # Load data into FalkorDB (clearing previous data)
-python 1_load_to_falkordb.py --clear --graph Paper_Keywords2
+python 1_load_to_falkordb.py --clear --graph Paper_Keywords3
 ```
 
 ### 3. Enrich & Embed
+
 ```bash
 # Generate descriptions (Optional but recommended)
-python 2_enrich_graph_data.py --graph Paper_Keywords2
+python 2_enrich_graph_data.py --graph Paper_Keywords3
 
 # Create embeddings (Required for RAG)
-python 3_create_embeddings.py --graph Paper_Keywords2
+python 3_create_embeddings.py --graph Paper_Keywords3
 ```
 
 ### 4. Run RAG Agent
+
 ```bash
 python 4_graph-rag-agent.py
 ```
 
 ### 5. Analyze Network
+
 ```bash
 python 5_analyze_network.py --graph Paper_Keywords2
 ``` → Query & Answer
@@ -130,12 +141,14 @@ python 1_load_to_falkordb.py --graph Paper_Keywords --clear
 ### Step 3: Enrich Graph with Descriptions
 
 **Test first:**
+
 ```bash
 # Process only 10 samples
 python 2_enrich_graph_data.py --sample 10
 ```
 
 **Process all:**
+
 ```bash
 # Process all nodes (takes time)
 python 2_enrich_graph_data.py --full
@@ -168,9 +181,8 @@ python 4_graph_rag.py --query "What are knowledge graphs?"
 python 5_analyze_network.py
 
 # Analyze specific graph
-python 5_analyze_network.py --graph Paper_Keywords
+python 5_analyze_network.py --graph Paper_Keywords3
 ```
-<img width="2964" height="1618" alt="image" src="https://github.com/user-attachments/assets/5360aeb0-fa91-4064-a3ed-4aa1267578cd" />
 
 ## 💡 Usage Examples
 
@@ -180,15 +192,15 @@ python 5_analyze_network.py --graph Paper_Keywords
 from graphrag_query import GraphRAG
 
 # Initialize GraphRAG
-rag = GraphRAG(graph_name='EnergyGraph')
+rag = GraphRAG(graph_name='Paper_Keywords3')
 
 # Ask a question
-answer = rag.query("Which Korean company develops high-energy density batteries?")
+answer = rag.query("What are the main purposes of patent citation analysis?")
 print(answer)
 
 # Ask with details
 answer = rag.query(
-    "Which companies develop Solid-State Batteries?",
+    "Which methodologies are used for technology convergence analysis?",
     top_k=5,           # Search top 5 nodes
     verbose=True       # Print search process
 )
@@ -201,11 +213,13 @@ python graphrag_query.py
 ```
 
 ```
-💬 Question: What battery technologies does Tesla develop?
-🔍 Question: What battery technologies does Tesla develop?
+💬 Question: What are the main applications of patent network analysis?
+🔍 Question: What are the main applications of patent network analysis?
 ...
 ✅ Answer:
-Tesla develops LFP Battery and BMS technologies...
+Patent network analysis is applied in identifying technology trends,
+mapping knowledge flows, discovering innovation patterns, and
+analyzing technological convergence across different fields...
 ```
 
 ## 🔍 System Architecture
@@ -261,18 +275,33 @@ All settings are centralized in `config.py`:
 ```python
 # Model Settings
 GRAPH_GENERATION_MODEL = 'gpt-oss:20b'  # For graph generation
-LLM_MODEL = 'deepseek-r1:8b'            # For enrichment
+
+# --- Select ONE of the following Model Configurations ---
+
+# Option 1: Local Ollama Model (Default)
+LLM_MODEL = 'deepseek-r1:8b'
+CHAT_MODEL = 'deepseek-r1:8b'
+
+# Option 2: Ollama Cloud - DeepSeek v3.1
+# LLM_MODEL = 'deepseek-v3.1:671b-cloud'
+# CHAT_MODEL = 'deepseek-v3.1:671b-cloud'
+
+# Option 3: Ollama Cloud - GPT-OSS
+# LLM_MODEL = 'gpt-oss:120b-cloud'
+# CHAT_MODEL = 'gpt-oss:120b-cloud'
+
 EMBED_MODEL = 'nomic-embed-text:latest' # For embeddings
 
 # Performance Settings
-BATCH_SIZE = 10
-MAX_NODE_TYPES = 3
-MAX_EDGE_TYPES = 3
-MAX_ROWS_FOR_EXTRACTION = None  # None = all rows
+BATCH_SIZE = 7
+MAX_NODE_TYPES = 2
+MAX_EDGE_TYPES = 2
+MAX_ROWS_FOR_EXTRACTION = 10  # None = all rows, or set to specific number
 MAX_TEXT_LENGTH = 200  # Truncate long text
 ```
 
 **For detailed configuration options, see:**
+
 - `GRAPH_GENERATOR_README.md` - Graph generation settings
 - `README_OLLAMA.md` - Ollama configuration
 
@@ -285,6 +314,7 @@ MAX_TEXT_LENGTH = 200  # Truncate long text
 ## 📊 Check Data
 
 ### Using FalkorDB UI
+
 Access `http://localhost:3001` in your browser
 
 ```cypher
@@ -306,18 +336,23 @@ YIELD node RETURN node
 ## 🐛 Troubleshooting
 
 ### "Ollama Connection Failed"
+
 Ensure Ollama is running:
+
 ```bash
 ollama serve
 ```
 
 ### "FalkorDB Connection Failed"
+
 Check if FalkorDB Docker container is running:
+
 ```bash
 docker ps | grep falkordb
 ```
 
 ### "No vector index found"
+
 Run `create_embeddings.py` first.
 
 ## 💰 Estimated Costs

@@ -2,7 +2,7 @@
 
 ## 📊 Project Overview
 
-This project is a **100% Ollama-based GraphRAG system** that builds a battery industry knowledge graph and provides natural language Q&A.
+This project is a **100% Ollama-based GraphRAG system** that analyzes scientific papers related to patent network analysis and innovation research, providing natural language Q&A capabilities.
 
 ## 🗂️ Directory Structure
 
@@ -48,6 +48,7 @@ This project is a **100% Ollama-based GraphRAG system** that builds a battery in
 ### 🐍 Python Scripts (By Execution Order)
 
 #### `0_graph_schema_discovery.py` - Auto Graph Generation (LLM)
+
 **Function**: Automatically generates graph from any raw data using LLM
 
 **See**: `GRAPH_GENERATOR_README.md` for detailed documentation
@@ -55,20 +56,24 @@ This project is a **100% Ollama-based GraphRAG system** that builds a battery in
 ---
 
 #### `0_generate_research_keywords.py` - Scientific Paper Analysis
+
 **Function**: Extracts structured keywords from scientific papers and builds a sophisticated knowledge graph.
 
 **Key Features**:
+
 - **Paper Hubs**: Creates a `Paper` node for each document.
 - **Structural Edges**: Connects Paper to its keywords (`HAS_PURPOSE`, `HAS_METHOD`, etc.).
 - **Semantic Edges**: Connects keywords of the **same type** if they are semantically similar.
 - **LLM Extraction**: Extracts Purpose, Background, Methodology, Results.
 
 **Output**:
+
 - `papers.csv`
 - `research_purpose.csv`, `research_background.csv`, etc.
 - `relations.csv`
 
 **Execution**:
+
 ```bash
 python 0_generate_research_keywords.py
 ```
@@ -76,33 +81,40 @@ python 0_generate_research_keywords.py
 ---
 
 #### `1_load_to_falkordb.py` - Load Data to FalkorDB
+
 **Function**: Dynamically loads ALL CSV files found in `data/csv/` into FalkorDB.
 
 **Key Features**:
+
 - **Dynamic Loading**: Automatically detects node files.
 - **Graph Support**: Specify target graph with `--graph`.
 - **Clear Option**: Clear existing graph with `--clear`.
 
 **Execution**:
+
 ```bash
-python 1_load_to_falkordb.py --clear --graph Paper_Keywords2
+python 1_load_to_falkordb.py --clear --graph Paper_Keywords3
 ```
 
 ---
 
 #### `2_enrich_graph_data.py` - Generate Descriptions (Ollama LLM)
+
 **Function**: Adds AI-generated descriptions to graph nodes
 
 **Model Used**: `deepseek-r1:8b` (Ollama LLM)
 
 **Key Operations**:
+
 1. Retrieve nodes without descriptions
 2. Generate descriptions for each node using Ollama LLM
-   - Technology: Technical features, uses, pros/cons
-   - Company: Company info, main business, characteristics
+   - Research Purpose: Objectives, goals, and research questions
+   - Methodology: Technical approaches, methods, and algorithms
+   - Results: Key findings and contributions
 3. Save generated descriptions as node properties
 
 **Execution**:
+
 ```bash
 # Enrich default graph
 python 2_enrich_graph_data.py
@@ -118,30 +130,45 @@ python 2_enrich_graph_data.py --full
 ```
 
 **Configuration**:
+
 ```python
 # Modify config.py
+# Option 1: Local Ollama Model (Default)
 LLM_MODEL = 'deepseek-r1:8b'
+CHAT_MODEL = 'deepseek-r1:8b'
+
+# Option 2: Ollama Cloud - DeepSeek v3.1
+# LLM_MODEL = 'deepseek-v3.1:671b-cloud'
+# CHAT_MODEL = 'deepseek-v3.1:671b-cloud'
+
+# Option 3: Ollama Cloud - GPT-OSS
+# LLM_MODEL = 'gpt-oss:120b-cloud'
+# CHAT_MODEL = 'gpt-oss:120b-cloud'
 ```
 
 ---
 
 #### `3_create_embeddings.py` - Create Embeddings (Ollama)
+
 **Function**: Converts node descriptions into vector embeddings
 
 **Model Used**: `nomic-embed-text:latest` (Ollama Embedding)
 
 **Key Operations**:
+
 1. Retrieve nodes without embeddings
 2. Convert text → vector using Ollama API
 3. Save vector as node property `embedding`
 4. Persistent caching in `data/embedding/embeddings_cache.json`
 
 **Features**:
+
 - Data preparation for client-side search
 - Prevents 'Invalid arguments' errors
 - Caches embeddings for reuse
 
 **Execution**:
+
 ```bash
 # Create embeddings for default graph
 python 3_create_embeddings.py
@@ -153,13 +180,16 @@ python 3_create_embeddings.py --graph Paper_Keywords
 ---
 
 #### `4_graph-rag.py` - GraphRAG Query System
+
 **Function**: Natural Language Q&A System (Guaranteed RAG)
 
 **Models Used**:
+
 - Embedding: `nomic-embed-text:latest`
 - LLM: `deepseek-r1:8b`
 
 **Key Operations**:
+
 1. Cache all node data in memory
 2. Convert user question to vector
 3. Calculate cosine similarity within Python (No DB index used)
@@ -168,24 +198,30 @@ python 3_create_embeddings.py --graph Paper_Keywords
 6. Generate LLM answer based on context
 
 **Features**:
+
 - **Guaranteed RAG**: Removes DB index dependency
 - Guaranteed accuracy with in-memory search
 
 **Execution**:
+
 ```bash
 python 4_graph-rag.py
 ```
 
 **Example Questions**:
-- "Who develops Sodium-Ion batteries?"
-- "Which battery companies collaborate with Ford?"
+
+- "What are the main purposes of patent citation analysis?"
+- "Which methodologies are used for technology convergence analysis?"
+- "How is patent network analysis applied in innovation research?"
 
 ---
 
 #### `5_analyze_network.py` - Network Analysis
+
 **Function**: Analyze graph network and discover important nodes
 
 **Analysis Algorithms**:
+
 1. **Degree Centrality**: Popularity based on connection count
    - Discover nodes with the most connections
 2. **Influence Score**: Structural influence analysis
@@ -194,6 +230,7 @@ python 4_graph-rag.py
    - Measures triangle density around nodes
 
 **Execution**:
+
 ```bash
 # Analyze default graph
 python 5_analyze_network.py
@@ -203,21 +240,23 @@ python 5_analyze_network.py --graph Paper_Keywords
 ```
 
 **Output Example**:
+
 ```
 === Graph Statistics ===
 Total Nodes: 1315
 Total Edges: 101967
 
 === 1. Degree Centrality TOP 10 ===
-Rank 1: [Keyword] technology classification (Degree: 735)
+Rank 1: [Purpose] Patent Citation Analysis (Degree: 735)
 ...
 
 === 2. PageRank (Structural Influence) TOP 10 ===
-Rank 1: [Keyword] patent data analysis... (Influence: 446)
+Rank 1: [Methodology] Network Analysis (Influence: 446)
 ...
 ```
 
 **Features**:
+
 - Works with any graph schema
 - Generic node/edge queries
 - Multiple centrality metrics
@@ -273,30 +312,33 @@ python 5_analyze_network.py
 
 ## 📋 CSV File Format
 
-### `companies.csv`
+### `papers.csv`
+
 ```csv
-name,country
-LG Energy Solution,Korea
-Tesla,USA
-CATL,China
+title,year,authors
+"Patent network analysis for innovation",2020,"Smith et al."
+"Technology convergence in AI",2021,"Johnson M."
+"Knowledge flows in patent citations",2019,"Lee K."
 ...
 ```
 
-### `technologies.csv`
+### `research_purpose.csv`
+
 ```csv
 name,category
-NCM Battery,Battery
-LFP Battery,Battery
-BMS,Software
+Identifying Key Technologies,Analysis Purpose
+Technology Forecasting,Prediction
+Knowledge Flow Mapping,Network Analysis
 ...
 ```
 
 ### `relations.csv`
+
 ```csv
 START_ID,END_ID,TYPE
-LG Energy Solution,NCM Battery,DEVELOPS
-Tesla,LFP Battery,DEVELOPS
-CATL,LFP Battery,DEVELOPS
+"Patent network analysis for innovation",Identifying Key Technologies,HAS_PURPOSE
+"Technology convergence in AI",Technology Forecasting,HAS_PURPOSE
+"Knowledge flows in patent citations",Knowledge Flow Mapping,HAS_PURPOSE
 ...
 ```
 
@@ -307,10 +349,10 @@ CATL,LFP Battery,DEVELOPS
 | Setting Item | File | Default Value |
 |---------|------|--------|
 | Data Count | `0_generate_data.py` | 20/100/300 |
-| LLM Model | `config.py` | `deepseek-r1:8b` |
+| LLM Model | `config.py` | `deepseek-r1:8b` (Local) / `deepseek-v3.1:671b-cloud` (Cloud) / `gpt-oss:120b-cloud` (Cloud) |
 | Embedding Model | `config.py` | `nomic-embed-text:latest` |
-| Chat Model | `config.py` | `deepseek-r1:8b` |
-| Graph Name | `config.py` | `EnergyGraph` |
+| Chat Model | `config.py` | Same as LLM Model |
+| Graph Name | `config.py` | `Paper_Keywords3` |
 
 ---
 
