@@ -66,6 +66,7 @@ ollama pull nomic-embed-text
 ```bash
 # Option A: General Data (Schema Discovery)
 python 0_graph_schema_discovery.py
+<img width="762" height="713" alt="image" src="https://github.com/user-attachments/assets/ff9156b3-514f-478c-896c-27e61c57f1e7" />
 
 # Option B: Scientific Papers (Research Keywords)
 python 0_generate_research_keywords.py
@@ -124,6 +125,9 @@ python 0_graph_schema_discovery.py
 # Run FalkorDB with Docker
 docker run -p 6379:6379 -p 3001:3000 -it --rm falkordb/falkordb
 ```
+
+<img width="2964" height="1618" alt="image" src="https://github.com/user-attachments/assets/a366a35b-e6d2-4748-aa29-233bb5a08602" />
+
 
 ### Step 2: Load Data into FalkorDB
 
