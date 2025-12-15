@@ -7,6 +7,7 @@ A comprehensive GraphRAG system for knowledge graph construction and querying us
 ### Core Pipeline Scripts
 
 **Graph Generation (NEW - LLM-Driven)**
+
 0. **`0_graph_schema_discovery.py`** - Automatic graph generation from raw data
 
 - Analyzes raw data using LLM
@@ -33,6 +34,7 @@ A comprehensive GraphRAG system for knowledge graph construction and querying us
    - Generates and caches embeddings for vector search.
 
 **RAG & Analysis**
+
 4. **`4_graph-rag-agent.py`** - Interactive GraphRAG Agent
 
 - **Transparent RAG**: Displays **Source Context** (Top 3 Nodes & Edges) used for the answer.
