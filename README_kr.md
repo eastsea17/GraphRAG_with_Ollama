@@ -234,31 +234,31 @@ flowchart TD
     classDef db fill:#dda,stroke:#333,stroke-width:2px;
     classDef input fill:#aaf,stroke:#333,stroke-width:2px;
 
-    %% Step 0: Data Gen
-    subgraph S0 [단계 0: 데이터 생성 (Data Generation)]
-        Raw[참조 데이터 / 원본 데이터\nCSV / PDF]:::input -->|0_generate_research_keywords.py| Ext[LLM 추출 및 그래프 구축]:::step
-        Ext -->|생성| Nodes[노드 CSVs]:::db
-        Ext -->|생성| Edges[의지(Edge) CSVs]:::db
+    %% Step 0: Data Gen (텍스트에 따옴표 추가)
+    subgraph S0 ["단계 0: 데이터 생성 (Data Generation)"]
+        Raw["참조 데이터 / 원본 데이터<br/>(CSV / PDF)"]:::input -->|0_generate_research_keywords.py| Ext["LLM 추출 및 그래프 구축"]:::step
+        Ext -->|생성| Nodes["노드 CSVs"]:::db
+        Ext -->|생성| Edges["엣지(Edge) CSVs"]:::db
     end
 
     %% Step 1: Loading
-    subgraph S1 [단계 1: 데이터베이스 로딩]
-        Nodes & Edges -->|1_load_to_falkordb.py| FDB[(FalkorDB)]:::db
+    subgraph S1 ["단계 1: 데이터베이스 로딩"]
+        Nodes & Edges -->|1_load_to_falkordb.py| FDB[("FalkorDB")]:::db
     end
 
-    %% Step 2 & 3: Enrichment
-    subgraph S2 [단계 2 & 3: 데이터 보강 (Enrichment)]
-        FDB -->|2_enrich_graph_data.py\nLLM 설명 생성| Desc[노드 설명]:::step
-        Desc -->|3_create_embeddings.py\n임베딩 모델| Vec[벡터 임베딩]:::step
+    %% Step 2 & 3: Enrichment (특수문자 & 괄호 따옴표 처리)
+    subgraph S2 ["단계 2 & 3: 데이터 보강 (Enrichment)"]
+        FDB -->|"2_enrich_graph_data.py<br/>(LLM 설명 생성)"| Desc["노드 설명"]:::step
+        Desc -->|"3_create_embeddings.py<br/>(임베딩 모델)"| Vec["벡터 임베딩"]:::step
         Vec -->|업데이트| FDB
     end
 
     %% Step 4: RAG
-    subgraph S3 [단계 4: RAG 쿼리]
-        User[사용자 질문]:::input -->|4_graph-rag-agent.py| Emb[쿼리 임베딩]:::step
+    subgraph S3 ["단계 4: RAG 쿼리"]
+        User["사용자 질문"]:::input -->|4_graph-rag-agent.py| Emb["쿼리 임베딩"]:::step
         Emb -->|벡터 검색| FDB
-        FDB -->|그래프 탐색| Ctx[컨텍스트 조합]:::step
-        Ctx -->|LLM 생성| Ans[최종 답변]:::input
+        FDB -->|그래프 탐색| Ctx["컨텍스트 조합"]:::step
+        Ctx -->|LLM 생성| Ans["최종 답변"]:::input
     end
     
     S0 --> S1
