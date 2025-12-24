@@ -8,14 +8,14 @@ A comprehensive GraphRAG system for knowledge graph construction and querying us
 
 **Graph Generation (NEW - LLM-Driven)**
 
-0. **`0_graph_schema_discovery.py`** - Automatic graph generation from raw data
+1. **`0_graph_schema_discovery.py`** - Automatic graph generation from raw data
 
 - Analyzes raw data using LLM
 - Discovers Node/Edge schema automatically
 - Extracts entities and relationships
 - **See `GRAPH_GENERATOR_README.md` for details**
 
-0. **`0_generate_research_keywords.py`** - Scientific Paper Analysis & Graph Construction
+1. **`0_generate_research_keywords.py`** - Scientific Paper Analysis & Graph Construction
    - **Sophisticated Graph Structure**:
      - **Paper Nodes**: Central hubs representing each document.
      - **Structural Edges**: `(Paper)-[:HAS_PURPOSE]->(Purpose)`, `(Paper)-[:HAS_METHOD]->(Methodology)`, etc.
@@ -35,13 +35,13 @@ A comprehensive GraphRAG system for knowledge graph construction and querying us
 
 **RAG & Analysis**
 
-4. **`4_graph-rag-agent.py`** - Interactive GraphRAG Agent
+1. **`4_graph-rag-agent.py`** - Interactive GraphRAG Agent
 
 - **Transparent RAG**: Displays **Source Context** (Top 3 Nodes & Edges) used for the answer.
 - **Hybrid Search**: Combines Vector Search + Graph Traversal (1-hop).
 - **Interactive CLI**: Chat interface with the knowledge graph.
 
-5. **`5_analyze_network.py`** - Network Analysis
+1. **`5_analyze_network.py`** - Network Analysis
    - Calculates Degree Centrality, Influence Score, etc.
 
 ### Utility Scripts
@@ -129,7 +129,6 @@ docker run -p 6379:6379 -p 3001:3000 -it --rm falkordb/falkordb
 ```
 
 <img width="2964" height="1618" alt="image" src="https://github.com/user-attachments/assets/a366a35b-e6d2-4748-aa29-233bb5a08602" />
-
 
 ### Step 2: Load Data into FalkorDB
 
@@ -230,48 +229,45 @@ analyzing technological convergence across different fields...
 
 ## 🔍 System Architecture
 
-### Complete Pipeline
+### Complete Pipeline Code
 
-```
-📄 Raw Data (CSV/Excel/Word/PDF)
-    ↓
-🤖 0. LLM-Driven Graph Generation
-    - Analyze content domain & topics
-    - Discover Node/Edge schema
-    - Extract entities & relationships
-    ↓
-📊 CSV Files (Nodes + Edges)
-    ↓
-⬆️ 1. Load to FalkorDB
-    ↓
-💬 2. LLM Enrichment (Add descriptions)
-    ↓
-🔢 3. Create Vector Embeddings
-    ↓
-❓ 4. GraphRAG Query Engine
-```
+```mermaid
+flowchart TD
+    %% Define Styles
+    classDef step fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef db fill:#dda,stroke:#333,stroke-width:2px;
+    classDef input fill:#aaf,stroke:#333,stroke-width:2px;
 
-### Query Flow
+    %% Step 0: Data Gen
+    subgraph S0 [Step 0: Data Generation]
+        Raw[Reference Data / Raw Data\nCSV / PDF]:::input -->|0_generate_research_keywords.py| Ext[LLM Extraction & Graph Construction]:::step
+        Ext -->|Generates| Nodes[Node CSVs]:::db
+        Ext -->|Generates| Edges[Edge CSVs]:::db
+    end
 
-```
-User Question
-    ↓
-1. Query Embedding (Ollama)
-    ↓
-2. Vector Search (FalkorDB)
-   - Search relevant nodes using embeddings
-    ↓
-3. Graph Traversal (Cypher)
-   - Traverse relationship network
-   - Gather connected information
-    ↓
-4. Context Assembly
-   - Collect node information
-   - Add relationship context
-    ↓
-5. LLM Answer Generation (Ollama)
-    ↓
-Final Answer
+    %% Step 1: Loading
+    subgraph S1 [Step 1: Database Loading]
+        Nodes & Edges -->|1_load_to_falkordb.py| FDB[(FalkorDB)]:::db
+    end
+
+    %% Step 2 & 3: Enrichment
+    subgraph S2 [Step 2 & 3: Enrichment]
+        FDB -->|2_enrich_graph_data.py\nLLM Description| Desc[Node Descriptions]:::step
+        Desc -->|3_create_embeddings.py\nEmbedding Model| Vec[Vector Embeddings]:::step
+        Vec -->|Update| FDB
+    end
+
+    %% Step 4: RAG
+    subgraph S3 [Step 4: RAG Query]
+        User[User Question]:::input -->|4_graph-rag-agent.py| Emb[Query Embedding]:::step
+        Emb -->|Vector Search| FDB
+        FDB -->|Graph Traversal| Ctx[Context Assembly]:::step
+        Ctx -->|LLM Generation| Ans[Final Answer]:::input
+    end
+    
+    S0 --> S1
+    S1 --> S2
+    S2 --> S3
 ```
 
 ## ⚙️ Configuration
