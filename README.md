@@ -68,7 +68,6 @@ ollama pull nomic-embed-text
 ```bash
 # Option A: General Data (Schema Discovery)
 python 0_graph_schema_discovery.py
-<img width="762" height="713" alt="image" src="https://github.com/user-attachments/assets/ff9156b3-514f-478c-896c-27e61c57f1e7" />
 
 # Option B: Scientific Papers (Research Keywords)
 python 0_generate_research_keywords.py
